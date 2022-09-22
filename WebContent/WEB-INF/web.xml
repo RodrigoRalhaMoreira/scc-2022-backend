@@ -14,13 +14,18 @@
     <servlet-name>Resteasy</servlet-name>
     <servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
      <init-param>
-        <param-name>javax.ws.rs.Application</param-name>
+        <param-name>jakarta.ws.rs.Application</param-name>
         <param-value>scc.srv.MainApplication</param-value>
     </init-param>
 </servlet>
 <servlet-mapping>
     <servlet-name>Resteasy</servlet-name>
-    <url-pattern>/*</url-pattern>
+    <url-pattern>/rest/*</url-pattern>
 </servlet-mapping>
-
+<context-param>
+  <param-name>resteasy.servlet.mapping.prefix</param-name>
+  <param-value>/rest</param-value>
+</context-param>
  </web-app>
+ 
+ 
