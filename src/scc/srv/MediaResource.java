@@ -1,5 +1,6 @@
 package scc.srv;
 
+import jakarta.ws.rs.*;
 import scc.utils.Hash;
 
 import java.util.ArrayList;
@@ -7,13 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 /**
@@ -45,8 +39,10 @@ public class MediaResource
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public byte[] download(@PathParam("id") String id) {
-		//throw new ServiceUnavailableException();
-		return null;
+		byte[] bytes = map.get(id);
+		if(bytes == null)
+			throw new ServiceUnavailableException();
+		return bytes;
 	}
 
 	/**
@@ -56,6 +52,8 @@ public class MediaResource
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<String> list() {
-		return new ArrayList<String>( map.keySet());
+		if(!map.keySet().isEmpty())
+			return new ArrayList<String>( map.keySet());
+		return null;
 	}
 }

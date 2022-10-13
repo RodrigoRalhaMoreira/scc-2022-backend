@@ -1,0 +1,37 @@
+== Info:   Trying 20.107.224.3:443...
+== Info: Connected to scc-backend-57943.azurewebsites.net (20.107.224.3) port 443 (#0)
+== Info: schannel: disabled automatic use of client certificate
+== Info: ALPN: offers http/1.1
+== Info: ALPN: server accepted http/1.1
+=> Send header, 169 bytes (0xa9)
+0000: POST /rest/media/ HTTP/1.1
+001c: Host: scc-backend-57943.azurewebsites.net
+0047: User-Agent: curl/7.83.1
+0060: Accept: */*
+006d: Content-Type:application/octet-stream
+0094: Content-Length: 4
+00a7: 
+=> Send data, 4 bytes (0x4)
+0000: POST
+== Info: Mark bundle as not supporting multiuse
+<= Recv header, 17 bytes (0x11)
+0000: HTTP/1.1 200 OK
+<= Recv header, 20 bytes (0x14)
+0000: Content-Length: 40
+<= Recv header, 32 bytes (0x20)
+0000: Content-Type: application/json
+<= Recv header, 37 bytes (0x25)
+0000: Date: Thu, 22 Sep 2022 14:09:30 GMT
+<= Recv header, 156 bytes (0x9c)
+0000: Set-Cookie: ARRAffinity=13fe52e0156fc00ceb2c023eb11585b7f0d8a9db
+0040: 84b145e912aaed31c8245beb;Path=/;HttpOnly;Secure;Domain=scc-backe
+0080: nd-57943.azurewebsites.net
+<= Recv header, 178 bytes (0xb2)
+0000: Set-Cookie: ARRAffinitySameSite=13fe52e0156fc00ceb2c023eb11585b7
+0040: f0d8a9db84b145e912aaed31c8245beb;Path=/;HttpOnly;SameSite=None;S
+0080: ecure;Domain=scc-backend-57943.azurewebsites.net
+<= Recv header, 2 bytes (0x2)
+0000: 
+<= Recv data, 40 bytes (0x28)
+0000: 61FF81C30AA3C76E78AFEA62B2E3BD1DFA49E854
+== Info: Connection #0 to host scc-backend-57943.azurewebsites.net left intact
