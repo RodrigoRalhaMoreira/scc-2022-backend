@@ -92,6 +92,11 @@
 	<version>6.2.0.Final</version>
 </dependency>
 <dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>azure</artifactId>
+			<version>1.41.4</version>
+		</dependency>
+<dependency>
 			<groupId>com.azure</groupId>
 			<artifactId>azure-storage-blob</artifactId>
 			<version>12.19.1</version>
