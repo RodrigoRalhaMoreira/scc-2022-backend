@@ -24,7 +24,6 @@ public class UsersResource {
      * Creates a new user.The id of the user is its hash.
      */
     @POST
-    @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(User user) {
@@ -42,7 +41,6 @@ public class UsersResource {
      * id does not exist.
      */
     @GET
-    @Path("/update")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public User updtate(@PathParam("user_id") String id) {
         return null;
@@ -53,7 +51,6 @@ public class UsersResource {
      * id does not exist.
      */
     @GET
-    @Path("/delete")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public User delete(@PathParam("user_id") String id) {
         return null;
