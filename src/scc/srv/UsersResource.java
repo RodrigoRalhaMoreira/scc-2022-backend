@@ -18,9 +18,7 @@ import com.azure.storage.blob.BlobContainerClientBuilder;
  */
 @Path("/user")
 public class UsersResource {
-    private static final String USERS_CONTAINER = "user";
-    private static final String USERS_BLOB = "users";
-    Map<String, User> users = new HashMap<String, User>();
+    private static CosmosDBLayer db_instance = CosmosDBLayer.getInstance();
 
     /**
      * Creates a new user.The id of the user is its hash.
@@ -33,35 +31,9 @@ public class UsersResource {
         if (user == null) {
             System.out.println("Null user exception");
         }
-        // Store the user locally?? Is this necessary?? For faster accesses??
-        users.put(Hash.of(user.getId()), user);
-
         // Create the user to store in the db
         UserDAO dbUser = new UserDAO(user);
-        BinaryData binaryUser = BinaryData.fromString(dbUser.toString());
-
-        // Get connection string in the storage access keys page
-        String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=scc57943;AccountKey=tnWm4OfhzV9PO5PLULNE9bHQREnbCxGH0vLdjyE2y10l8IivZV4WeCe3jCuf4c+mltKSSW7RWB5a+AStWnQcTQ==;EndpointSuffix=core.windows.net";
-
-        try {
-
-            // Get container client
-            BlobContainerClient containerClient = new BlobContainerClientBuilder()
-                    .connectionString(storageConnectionString)
-                    .containerName(USERS_CONTAINER)
-                    .buildClient();
-
-            // Get client to blob
-            BlobClient blob = containerClient.getBlobClient(USERS_BLOB);
-
-            // Upload contents from BinaryData (check documentation for other alternatives)
-            blob.upload(binaryUser);
-
-            System.out.println("User created : " + dbUser.getName());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        db_instance.putUser(dbUser);
         return dbUser.getId();
     }
 
@@ -73,10 +45,7 @@ public class UsersResource {
     @Path("/update")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public User updtate(@PathParam("user_id") String id) {
-        User u = users.get(id);
-        if (u == null)
-            throw new ServiceUnavailableException();
-        return u;
+        return null;
     }
 
     /**
@@ -87,10 +56,6 @@ public class UsersResource {
     @Path("/delete")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public User delete(@PathParam("user_id") String id) {
-        User u = users.get(id);
-        if (u == null)
-            throw new ServiceUnavailableException();
-        users.remove(id);
-        return u;
+        return null;
     }
 }
