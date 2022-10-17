@@ -1,17 +1,8 @@
 package scc.srv;
 
 import jakarta.ws.rs.*;
-import scc.utils.Hash;
-
-import java.util.Map;
-import java.util.HashMap;
 
 import jakarta.ws.rs.core.MediaType;
-
-import com.azure.core.util.BinaryData;
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobContainerClientBuilder;
 
 /**
  * Resource for managing users.
@@ -40,19 +31,32 @@ public class UsersResource {
      * Updates a user. Throw an appropriate error message if
      * id does not exist.
      */
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public User updtate(@PathParam("user_id") String id) {
-        return null;
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String update(User user) {
+        if (user == null) {
+            System.out.println("Null user exception");
+        }
+        if (db_instance.getUserById(user.getId()) == null)
+            System.out.println("User does not exist");
+        UserDAO dbUser = new UserDAO(user);
+        db_instance.updateUser(dbUser);
+        return dbUser.getId();
     }
 
     /**
      * Deletes a user. Throw an appropriate error message if
      * id does not exist.
      */
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public User delete(@PathParam("user_id") String id) {
-        return null;
+    @Path("/{id}")
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    public String delete(@PathParam("id") String id) {
+        System.out.println(id);
+        if (db_instance.getUserById(id) == null)
+            System.out.println("User does not exist");
+        db_instance.delUserById(id);
+        return id;
     }
 }

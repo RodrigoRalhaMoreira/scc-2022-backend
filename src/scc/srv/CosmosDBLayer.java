@@ -69,6 +69,11 @@ public class CosmosDBLayer {
 		return users.createItem(user);
 	}
 
+	public CosmosItemResponse<UserDAO> updateUser(UserDAO user) {
+		init();
+		return users.upsertItem(user);
+	}
+
 	public CosmosPagedIterable<UserDAO> getUserById(String id) {
 		init();
 		return users.queryItems("SELECT * FROM users WHERE users.id=\"" + id + "\"", new CosmosQueryRequestOptions(),
