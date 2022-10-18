@@ -1,7 +1,2 @@
-# Date : 15/10/2022, 16:44
-REDIS_KEY=6YpsGKonS00WcyKFKeEFVp0gSY07knfJTAzCaMKr23c=
-REDIS_URL=rediswesteuropegroupDRT.redis.cache.windows.net
-BlobStoreConnection=DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=Y7w91Wsw99GYqte6vyDzCrbB7A1ajyXD5DIvxqt9rDzHlATLqlvbqZBqgDljCw+7dpajHWAAUu8R+AStjxKu9A==;EndpointSuffix=core.windows.net
-COSMOSDB_KEY=lL0g8DLxQZUlxRCtvhjJLYtJJK3V8UdpC7ZC14fGbl6SfH5RV5z95oizQn7nqISV8aVMuo9y9k12syrMAc2AgQ==
-COSMOSDB_URL=https://scc23groupdrt.documents.azure.com:443/
-COSMOSDB_DATABASE=scc23dbgroupdrt
+# Date : 18/10/2022, 07:00
+BlobStoreConnection=DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=VN/uCPGRnW//p9+EGPblqkosiPLUEAJXd6fdeubgLT4jSkbtEHizwBHNfvRUs+5MYD3eKwy0Q+VQ+AStRIgTPQ==;EndpointSuffix=core.windows.net
