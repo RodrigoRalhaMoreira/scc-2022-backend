@@ -9,6 +9,7 @@ mvn compile package azure-webapp:deploy
 Then you can make the requests on postman
 
 Developed by:
+
 Rodrigo Moreira 57943 - rr.moreira@campus.fct.unl.pt
 
 Dinis Silvestre 58763 - dj.silvestre@campus.fct.unl.pt 
