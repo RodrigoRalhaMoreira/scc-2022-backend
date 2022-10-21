@@ -10,5 +10,7 @@ Then you can make the requests on postman
 
 Developed by:
 Rodrigo Moreira 57943 - rr.moreira@campus.fct.unl.pt
+
 Dinis Silvestre 58763 - dj.silvestre@campus.fct.unl.pt 
+
 Tiago Duarte 58125 - tj.duarte@campus.fct.unl.pt
