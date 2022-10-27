@@ -40,6 +40,7 @@ public class CosmosDBLayer {
 	private CosmosClient client;
 	private CosmosDatabase db;
 	private CosmosContainer users;
+	private CosmosContainer auctions;
 
 	public CosmosDBLayer(CosmosClient client) {
 		this.client = client;
@@ -87,6 +88,22 @@ public class CosmosDBLayer {
 
 	public void close() {
 		client.close();
+	}
+
+	public CosmosItemResponse<AuctionDAO> putAuction(AuctionDAO auction) {
+		init();
+		return auctions.createItem(auction);
+    }
+
+    public CosmosPagedIterable<AuctionDAO> getAuctionById(String id) {
+		init();
+        return auctions.queryItems("SELECT * FROM auctions WHERE auctions.id=\"" + id + "\"", new CosmosQueryRequestOptions(),
+		AuctionDAO.class);
+    }
+
+	public CosmosItemResponse<AuctionDAO> updateAuction(AuctionDAO dbAuction) {
+		init();
+		return auctions.upsertItem(dbAuction);
 	}
 
 }
