@@ -154,7 +154,7 @@
             </resources> 
           </deployment>  
           <resourceGroup>SCC</resourceGroup>  
-          <appName>scc-backend-57943</appName> 
+          <appName>scc-backend-57943-58125-58763</appName> 
         </configuration> 
       </plugin> 
     </plugins> 
