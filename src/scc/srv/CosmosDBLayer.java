@@ -13,7 +13,7 @@ import com.azure.cosmos.util.CosmosPagedIterable;
 
 public class CosmosDBLayer {
 	private static final String CONNECTION_URL = "https://scc23groupdrt.documents.azure.com:443/";
-	private static final String DB_KEY = "lL0g8DLxQZUlxRCtvhjJLYtJJK3V8UdpC7ZC14fGbl6SfH5RV5z95oizQn7nqISV8aVMuo9y9k12syrMAc2AgQ==";
+	private static final String DB_KEY = "nNaQx90GgUrilUlFIx9N1B7zv8wzblpSczL4IGGbFNIt5Q2YiOImwWUxIwieZmXbE3ELDhKSDSlbACDbwYwY4A==";
 	private static final String DB_NAME = "scc23dbgroupdrt";
 
 	private static CosmosDBLayer instance;
@@ -51,6 +51,7 @@ public class CosmosDBLayer {
 			return;
 		db = client.getDatabase(DB_NAME);
 		users = db.getContainer("users");
+		auctions = db.getContainer("auctions");
 
 	}
 

@@ -13,8 +13,10 @@ public class MainApplication extends Application {
 		resources.add(ControlResource.class);
 		resources.add(MediaResource.class);
 		resources.add(UsersResource.class);
+		resources.add(AuctionsResource.class);
 		singletons.add(new MediaResource());
 		singletons.add(new UsersResource());
+		singletons.add(new AuctionsResource());
 	}
 
 	@Override

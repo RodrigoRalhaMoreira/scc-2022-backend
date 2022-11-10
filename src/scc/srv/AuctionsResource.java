@@ -1,7 +1,5 @@
 package scc.srv;
 
-import com.microsoft.azure.keyvault.models.Action;
-
 import jakarta.ws.rs.*;
 
 import jakarta.ws.rs.core.MediaType;
@@ -11,6 +9,7 @@ import jakarta.ws.rs.core.MediaType;
  */
 @Path("/auction")
 public class AuctionsResource {
+
     private static CosmosDBLayer db_instance = CosmosDBLayer.getInstance();
 
     /**
