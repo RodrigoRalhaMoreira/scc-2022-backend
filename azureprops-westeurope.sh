@@ -4,3 +4,4 @@ az functionapp config appsettings set --name scc23appwesteuropegroupdrt --resour
 az functionapp config appsettings set --name scc23appwesteuropegroupdrt --resource-group scc23-rg-westeurope-groupdrt --settings "COSMOSDB_URL=https://scc23groupdrt.documents.azure.com:443/"
 az functionapp config appsettings set --name scc23appwesteuropegroupdrt --resource-group scc23-rg-westeurope-groupdrt --settings "COSMOSDB_DATABASE=scc23dbgroupdrt"
 az functionapp config appsettings set --name scc2223funwesteuropegroupdrt --resource-group scc23-rg-westeurope-groupdrt --settings "AzureCosmosDBConnection=AccountEndpoint=https://scc23groupdrt.documents.azure.com:443/;AccountKey=IRoYMeiLyyn1nJLImLkwkCbYST6DuUXKPB5yhOYKvHfS8CSgxUswMQdieyXmB6N0bVRmH0vY8lU9uy39jViYNg==;"
+

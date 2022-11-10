@@ -3,3 +3,4 @@ BlobStoreConnection=DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegr
 COSMOSDB_KEY=IRoYMeiLyyn1nJLImLkwkCbYST6DuUXKPB5yhOYKvHfS8CSgxUswMQdieyXmB6N0bVRmH0vY8lU9uy39jViYNg==
 COSMOSDB_URL=https://scc23groupdrt.documents.azure.com:443/
 COSMOSDB_DATABASE=scc23dbgroupdrt
+

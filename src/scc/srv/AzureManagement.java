@@ -34,7 +34,6 @@ import com.microsoft.azure.management.redis.RedisKeyType;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.management.resources.fluentcore.model.Creatable;
-import com.microsoft.azure.management.storage.AccessTier;
 import com.microsoft.azure.management.storage.BlobContainer;
 import com.microsoft.azure.management.storage.PublicAccess;
 import com.microsoft.azure.management.storage.StorageAccount;
@@ -458,6 +457,9 @@ public class AzureManagement {
 
 							// TODO: create the collections you have in your application
 							createCosmosCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, "users", "/id",
+									null);
+
+							createCosmosCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, "auctions", "/id",
 									null);
 
 							System.err.println("Azure Cosmos DB resources created with success");
