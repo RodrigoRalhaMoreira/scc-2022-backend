@@ -45,8 +45,7 @@ public class AzureManagement {
 	// Auth file location
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 	// TODO: This file should be created by running in the console:
-	// az ad sp create-for-rbac --role Contributor --scope
-	// /subscriptions/ID_OF_YOUR_SUBSCRIPTION --sdk-auth > azure.auth
+	// az ad sp create-for-rbac --role Contributor --scope /subscriptions/ID_OF_YOUR_SUBSCRIPTION --sdk-auth > azure.auth
 	static final String AZURE_AUTH_LOCATION = "azure.auth";
 
 	// TODO: These variable allow you to control what is being created
@@ -59,7 +58,7 @@ public class AzureManagement {
 
 	static final String AZURE_COSMOSDB_NAME = "scc23" + MY_SUFFIX; // Cosmos DB account name
 	static final String AZURE_COSMOSDB_DATABASE = "scc23db" + MY_SUFFIX; // Cosmos DB database name
-	static final String[] BLOB_CONTAINERS = { "images", "users" }; // Containers to add to the blob storage
+	static final String[] BLOB_CONTAINERS = { "images" }; // Containers to add to the blob storage
 
 	static final Region[] REGIONS = new Region[] { Region.EUROPE_WEST }; // Define the regions to deploy resources here
 
