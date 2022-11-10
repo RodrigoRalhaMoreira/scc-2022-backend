@@ -46,7 +46,8 @@ public class AzureManagement {
 	// Auth file location
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 	// TODO: This file should be created by running in the console:
-	// az ad sp create-for-rbac --role Contributor --scope /subscriptions/ID_OF_YOUR_SUBSCRIPTION --sdk-auth > azure.auth
+	// az ad sp create-for-rbac --role Contributor --scope
+	// /subscriptions/ID_OF_YOUR_SUBSCRIPTION --sdk-auth > azure.auth
 	static final String AZURE_AUTH_LOCATION = "azure.auth";
 
 	// TODO: These variable allow you to control what is being created
@@ -270,8 +271,11 @@ public class AzureManagement {
 	}
 
 	public static CosmosClient getCosmosClient(CosmosDBAccount account) {
+		System.out.println("Getting cosmos client");
+		System.out.println(account.documentEndpoint());
+		System.out.println(account.listKeys().primaryMasterKey());
 		CosmosClient client = new CosmosClientBuilder().endpoint(account.documentEndpoint())
-				.key(account.listKeys().primaryMasterKey()).directMode() // comment this is not to use direct mode
+				.key(account.listKeys().primaryMasterKey())// .directMode() // comment this is not to use direct mode
 				.consistencyLevel(ConsistencyLevel.SESSION).connectionSharingAcrossClientsEnabled(true)
 				.contentResponseOnWriteEnabled(true).buildClient();
 		System.out.println("CosmosDB client created with success: name = " + account.name());
@@ -458,6 +462,9 @@ public class AzureManagement {
 
 							// TODO: create the collections you have in your application
 							createCosmosCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, "users", "/id",
+									null);
+
+							createCosmosCollection(cosmosClient, AZURE_COSMOSDB_DATABASE, "auctions", "/id",
 									null);
 
 							System.err.println("Azure Cosmos DB resources created with success");
