@@ -3,7 +3,7 @@ package scc.srv;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents a User, as returned to the clients
+ * Represents an Auction
  */
 
 public class Auction {
