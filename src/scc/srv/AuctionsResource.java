@@ -57,7 +57,7 @@ public class AuctionsResource {
             System.out.println(AUCTION_NULL);
             return AUCTION_NULL;
         }
-        if (db_instance.getAuctionById(auction.getId()) == null) {
+        if (!db_instance.getAuctionById(auction.getId()).iterator().hasNext()) {
             System.out.println(AUCTION_NOT_EXIST);
             return AUCTION_NOT_EXIST;
         }
