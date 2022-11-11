@@ -14,6 +14,9 @@ public class AuctionsResource {
 
     private static String AUCTION_NULL = "Null auction exception";
     private static String AUCTION_NOT_EXIST = "Auction does not exist";
+    private static String USER_NOT_EXIST = "User does not exist";
+    private static String IMG_NOT_EXIST = "Image does not exist";
+
 
     /**
      * Creates a new auction. The id of the auction is its hash.
@@ -26,6 +29,16 @@ public class AuctionsResource {
             System.out.println(AUCTION_NULL);
             return AUCTION_NULL;
         }
+        if (!db_instance.getUserById(auction.getOwnerId()).iterator().hasNext()) {
+            System.out.println(USER_NOT_EXIST);
+            return USER_NOT_EXIST;
+        }
+        //verify if imgId exists
+        if (!verifyImgId(auction.getImgId())) {
+            System.out.println(IMG_NOT_EXIST);
+            return IMG_NOT_EXIST;
+        }
+
         // Create the user to store in the db
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.putAuction(dbAuction);
@@ -48,10 +61,16 @@ public class AuctionsResource {
             System.out.println(AUCTION_NOT_EXIST);
             return AUCTION_NOT_EXIST;
         }
+        if (!db_instance.getUserById(auction.getOwnerId()).iterator().hasNext()) {
+            System.out.println(USER_NOT_EXIST);
+            return USER_NOT_EXIST;
+        }
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.updateAuction(dbAuction);
         return dbAuction.getId();
     }
-
+    private boolean verifyImgId(String ImgId) {
+        return true;
+    }
     
 }
