@@ -94,13 +94,14 @@ public class CosmosDBLayer {
 	public CosmosItemResponse<AuctionDAO> putAuction(AuctionDAO auction) {
 		init();
 		return auctions.createItem(auction);
-    }
+	}
 
-    public CosmosPagedIterable<AuctionDAO> getAuctionById(String id) {
+	public CosmosPagedIterable<AuctionDAO> getAuctionById(String id) {
 		init();
-        return auctions.queryItems("SELECT * FROM auctions WHERE auctions.id=\"" + id + "\"", new CosmosQueryRequestOptions(),
-		AuctionDAO.class);
-    }
+		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.id=\"" + id + "\"",
+				new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
+	}
 
 	public CosmosItemResponse<AuctionDAO> updateAuction(AuctionDAO dbAuction) {
 		init();
