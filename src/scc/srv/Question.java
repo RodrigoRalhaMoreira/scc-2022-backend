@@ -1,7 +1,5 @@
 package scc.srv;
 
-import java.util.Arrays;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -10,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 
 public class Question {
-    @JsonProperty("questionId")
-    private String questionId;
+    @JsonProperty("id")
+    private String id;
     @JsonProperty("auctionId")
     private String auctionId;
     @JsonProperty("userId")
@@ -23,15 +21,15 @@ public class Question {
         super();
     }
 
-    public Question(String questionId, String auctionId, String userId, String message) {
-        this.questionId = questionId;
+    public Question(String id, String auctionId, String userId, String message) {
+        this.id = id;
         this.auctionId = auctionId;
         this.userId = userId;
         this.message = message;
     }
 
-    public String getQuestionId() {
-        return questionId;
+    public String getId() {
+        return id;
     }
 
     public String getAuctionId() {
@@ -48,7 +46,7 @@ public class Question {
 
     @Override
     public String toString() {
-        return "Question [questionId=" + questionId + ", auctionId=" + auctionId + ", userId=" + userId + ", message="
+        return "Question [id=" + id + ", auctionId=" + auctionId + ", userId=" + userId + ", message="
                 + message + "]";
     }
 

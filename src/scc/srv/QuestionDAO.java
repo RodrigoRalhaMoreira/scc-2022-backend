@@ -6,7 +6,7 @@ package scc.srv;
 public class QuestionDAO {
 	private String _rid;
 	private String _ts;
-	private String questionId;
+	private String id;
 	private String auctionId;
 	private String userId;
 	private String message;
@@ -15,12 +15,12 @@ public class QuestionDAO {
 	}
 
 	public QuestionDAO(Question q) {
-		this(q.getQuestionId(), q.getAuctionId(), q.getUserId(), q.getMessage());
+		this(q.getId(), q.getAuctionId(), q.getUserId(), q.getMessage());
 	}
 
-	public QuestionDAO(String questionId, String auctionId, String userId, String message) {
+	public QuestionDAO(String id, String auctionId, String userId, String message) {
 		super();
-		this.questionId = questionId;
+		this.id = id;
 		this.auctionId = auctionId;
 		this.userId = userId;
 		this.message = message;
@@ -42,8 +42,8 @@ public class QuestionDAO {
 		this._ts = _ts;
 	}
 
-	public String getQuestionId() {
-		return questionId;
+	public String getId() {
+		return id;
 	}
 
 	public String getAuctionId() {
@@ -59,12 +59,12 @@ public class QuestionDAO {
 	}
 
 	public Question toQuestion() {
-		return new Question(questionId, auctionId, userId, message);
+		return new Question(id, auctionId, userId, message);
 	}
 
 	@Override
 	public String toString() {
-		return "QuestionDAO [_rid=" + _rid + ", _ts=" + _ts + ", questionId=" + questionId + ", auctionId=" + auctionId
+		return "QuestionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", auctionId=" + auctionId
 				+ ", userId=" + userId + ", message=" + message + "]";
 	}
 }
