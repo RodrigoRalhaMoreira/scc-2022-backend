@@ -34,7 +34,6 @@ import com.microsoft.azure.management.redis.RedisKeyType;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.management.resources.fluentcore.model.Creatable;
-import com.microsoft.azure.management.storage.AccessTier;
 import com.microsoft.azure.management.storage.BlobContainer;
 import com.microsoft.azure.management.storage.PublicAccess;
 import com.microsoft.azure.management.storage.StorageAccount;
@@ -51,8 +50,8 @@ public class AzureManagement {
 	static final String AZURE_AUTH_LOCATION = "azure.auth";
 
 	// TODO: These variable allow you to control what is being created
-	static final boolean CREATE_STORAGE = true;
-	static final boolean CREATE_COSMOSDB = true;
+	static final boolean CREATE_STORAGE = false;
+	static final boolean CREATE_COSMOSDB = false;
 	static final boolean CREATE_REDIS = true;
 
 	// TODO: change your suffix and other names if you want

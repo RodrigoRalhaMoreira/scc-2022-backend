@@ -1,15 +1,32 @@
 package scc.srv;
 
-import jakarta.ws.rs.*;
+import scc.cache.RedisCache;
 
+import jakarta.ws.rs.*;
+import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
+
+import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Resource for managing users.
  */
 @Path("/user")
 public class UsersResource {
-    private static CosmosDBLayer db_instance = CosmosDBLayer.getInstance();
+    private static final String USER_NULL = "Error creating null user";
+    private static final String UPDATE_ERROR = "Error updating non-existent user";
+    private static final String DELETE_ERROR = "Error deleting non-existent user";
+
+    private static CosmosDBLayer db_instance;
+    private static Jedis jedis_instance;
+    private ObjectMapper mapper;
+
+    public UsersResource() {
+        db_instance = CosmosDBLayer.getInstance();
+        jedis_instance = RedisCache.getCachePool().getResource();
+        mapper = new ObjectMapper();
+    }
 
     /**
      * Creates a new user.The id of the user is its hash.
@@ -18,13 +35,17 @@ public class UsersResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(User user) {
-        if (user == null) {
-            System.out.println("Null user exception");
+        if (user == null)
+            return USER_NULL;
+
+        UserDAO userDao = new UserDAO(user);
+        try {
+            jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(userDao));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        // Create the user to store in the db
-        UserDAO dbUser = new UserDAO(user);
-        db_instance.putUser(dbUser);
-        return dbUser.getId();
+        db_instance.putUser(userDao);
+        return userDao.getId();
     }
 
     /**
@@ -36,13 +57,24 @@ public class UsersResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String update(User user) {
         if (user == null) {
-            System.out.println("Null user exception");
+            return USER_NULL;
         }
-        if (db_instance.getUserById(user.getId()) == null)
-            System.out.println("User does not exist");
-        UserDAO dbUser = new UserDAO(user);
-        db_instance.updateUser(dbUser);
-        return dbUser.getId();
+        UserDAO userDao = new UserDAO(user);
+        try {
+            String res = jedis_instance.get("user:" + user.getId());
+            if (res != user.getId() && res != null) {
+                jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(userDao));
+                db_instance.updateUser(userDao);
+                return userDao.getId();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (userExistsInDB(user.getId())) {
+            db_instance.updateUser(userDao);
+            return userDao.getId();
+        }
+        return UPDATE_ERROR;
     }
 
     /**
@@ -53,10 +85,17 @@ public class UsersResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public String delete(@PathParam("id") String id) {
-        System.out.println(id);
-        if (db_instance.getUserById(id) == null)
-            System.out.println("User does not exist");
-        db_instance.delUserById(id);
-        return id;
+        int removed = 0;
+        if (userExistsInDB(id)) {
+            db_instance.delUserById(id);
+            removed = 1;
+        }
+        jedis_instance.del("user:" + id);
+        return removed > 0 ? id : DELETE_ERROR;
+    }
+
+    private boolean userExistsInDB(String userId) {
+        CosmosPagedIterable<UserDAO> usersIt = db_instance.getUserById(userId);
+        return usersIt.iterator().hasNext();
     }
 }
