@@ -1,5 +1,7 @@
 package scc.srv;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -18,6 +20,8 @@ public class Auction {
     private String imgId;
     @JsonProperty("ownerId")
     private String ownerId;
+    @JsonProperty("endTime")
+    private Date endTime;
     @JsonProperty("minPrice")
     private int minPrice;
     @JsonProperty("winningBid")
@@ -29,11 +33,12 @@ public class Auction {
         super();
     }
 
-    public Auction(String title, String desription, String imgId, String ownerId, int minPrice, int winningBid, String status) {
+    public Auction(String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, int winningBid, String status) {
         this.title = title;
         this.description = desription;
         this.imgId = imgId;
         this.ownerId = ownerId;
+        this.endTime = endTime;
         this.minPrice = minPrice;
         this.winnigBid = winningBid;
         this.status = status;
@@ -75,6 +80,14 @@ public class Auction {
         return ownerId;
     }
 
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
+    }
+
     public void setOwner(String ownerId) {
         this.ownerId = ownerId;
     }
@@ -106,6 +119,6 @@ public class Auction {
     @Override
 	public String toString() {
 		return "Auction [id= " + id + ", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId + ", minPrice=" + minPrice + ", winnigBid=" + winnigBid +", status="+ status + "]";
+				+ ", ownerId=" + ownerId + ", endTime=" + endTime +  ", minPrice=" + minPrice + ", winnigBid=" + winnigBid +", status="+ status + "]";
 	}
 }

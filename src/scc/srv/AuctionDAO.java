@@ -1,5 +1,7 @@
 package scc.srv;
 
+import java.util.Date;
+
 public class AuctionDAO {
 
     private String _rid;
@@ -9,6 +11,7 @@ public class AuctionDAO {
     private String description;
     private String imgId;
     private String ownerId;
+    private Date endTime;
     private int minPrice;
     private int winnigBid;
     private String status;
@@ -16,16 +19,17 @@ public class AuctionDAO {
     public AuctionDAO() {}
 
     public AuctionDAO(Auction a) {
-        this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getMinPrice(), a.getWinnigBid(), a.getStatus());
+        this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getEndTime(), a.getMinPrice(), a.getWinnigBid(), a.getStatus());
     }
 
-    public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, int minPrice, int winningBid, String status) {
+    public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, int winningBid, String status) {
         super();
         this.id = id;
         this.title = title;
         this.description = desription;
         this.imgId = imgId;
         this.ownerId = ownerId;
+        this.endTime = endTime;
         this.minPrice = minPrice;
         this.winnigBid = winningBid;
         this.status = status;
@@ -87,6 +91,14 @@ public class AuctionDAO {
         this.ownerId = ownerId;
     }
 
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
+    }
+
     public int getMinPrice() {
         return minPrice;
     }
@@ -114,6 +126,6 @@ public class AuctionDAO {
     @Override
 	public String toString() {
 		return "AuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id= " + id +", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId + ", minPrice=" + minPrice + ", winnigBid=" + winnigBid +", status="+ status + "]";
+				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + winnigBid +", status="+ status + "]";
 	}
 }
