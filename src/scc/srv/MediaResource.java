@@ -2,11 +2,17 @@ package scc.srv;
 
 import jakarta.ws.rs.*;
 import scc.utils.Hash;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.azure.core.http.rest.PagedIterable;
+import com.azure.core.util.BinaryData;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobContainerClientBuilder;
+import com.azure.storage.blob.models.BlobItem;
 
 import jakarta.ws.rs.core.MediaType;
 
@@ -14,9 +20,7 @@ import jakarta.ws.rs.core.MediaType;
  * Resource for managing media files, such as images.
  */
 @Path("/media")
-public class MediaResource
-{
-	Map<String,byte[]> map = new HashMap<String,byte[]>();
+public class MediaResource {
 
 	/**
 	 * Post a new image.The id of the image is its hash.
@@ -26,9 +30,41 @@ public class MediaResource
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.APPLICATION_JSON)
 	public String upload(byte[] contents) {
-		String key = Hash.of(contents);
-		map.put( key, contents);
-		return key;
+	    
+	    if( contents == null) {
+            System.out.println( "Use: java scc.utils.UploadToStorage filename");
+        }
+	    
+        String filename = Hash.of(contents);
+
+        // Get connection string in the storage access keys page
+        String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;"
+                + "AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;"
+                + "EndpointSuffix=core.windows.net";
+
+        try {
+            
+            BinaryData data = BinaryData.fromBytes(contents); // BinaryData.fromFile(java.nio.file.Path.of(filename));
+
+            // Get container client
+            BlobContainerClient containerClient = new BlobContainerClientBuilder()
+                                                        .connectionString(storageConnectionString)
+                                                        .containerName("images")
+                                                        .buildClient();
+            
+            // Get client to blob
+            BlobClient blob = containerClient.getBlobClient(filename);
+
+            // Upload contents from BinaryData (check documentation for other alternatives)
+            blob.upload(data);
+            
+            System.out.println( "File updloaded : " + filename);
+            
+        } catch( Exception e) {
+            e.printStackTrace();
+        }
+        
+        return filename;
 	}
 
 	/**
@@ -39,21 +75,73 @@ public class MediaResource
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public byte[] download(@PathParam("id") String id) {
-		byte[] bytes = map.get(id);
-		if(bytes == null)
-			throw new ServiceUnavailableException();
-		return bytes;
+        
+        String filename = id;
+
+        // Get connection string in the storage access keys page
+        String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;"
+                + "AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;"
+                + "EndpointSuffix=core.windows.net";
+
+        try {
+            // Get container client
+            BlobContainerClient containerClient = new BlobContainerClientBuilder()
+                                                        .connectionString(storageConnectionString)
+                                                        .containerName("images")
+                                                        .buildClient();
+
+            // Get client to blob
+            BlobClient blob = containerClient.getBlobClient(filename);
+
+            // Download contents to BinaryData (check documentation for other alternatives)
+            BinaryData data = blob.downloadContent();
+            
+            System.out.println( "Blob size : " + data.toBytes().length);
+            
+            return data.toBytes();
+            
+        } catch( Exception e) {
+            e.printStackTrace();
+        }
+        
+        return null;
 	}
 
 	/**
 	 * Lists the ids of images stored.
 	 */
 	@GET
-	@Path("/")
+	@Path("/list")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<String> list() {
-		if(!map.keySet().isEmpty())
-			return new ArrayList<String>( map.keySet());
-		return null;
-	}
+	    
+	    List<String> list = new ArrayList<>();
+		
+	    // Get connection string in the storage access keys page
+        String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;"
+                + "AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;"
+                + "EndpointSuffix=core.windows.net";
+        
+        try {
+            // Get container client
+            BlobContainerClient containerClient = new BlobContainerClientBuilder()
+                                                        .connectionString(storageConnectionString)
+                                                        .containerName("images")
+                                                        .buildClient();
+
+            // Get client to blob
+            PagedIterable<BlobItem> blob = containerClient.listBlobs();
+
+            for(BlobItem item : blob)
+                list.add(item.getName());
+            
+            return list;
+            
+        } catch( Exception e) {
+            e.printStackTrace();
+        }
+        
+        return null;
+	} 
 }
+
