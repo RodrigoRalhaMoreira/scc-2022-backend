@@ -14,10 +14,12 @@ public class MainApplication extends Application {
 		resources.add(MediaResource.class);
 		resources.add(UsersResource.class);
 		resources.add(AuctionsResource.class);
-		resources.add(BidResource.class);
+		resources.add(QuestionsResource.class);
+    resources.add(BidResource.class);
 		singletons.add(new MediaResource());
 		singletons.add(new UsersResource());
 		singletons.add(new AuctionsResource());
+		singletons.add(new QuestionsResource());
 		singletons.add(new BidResource());
 	}
 

@@ -40,6 +40,7 @@ public class CosmosDBLayer {
 	private CosmosClient client;
 	private CosmosDatabase db;
 	private CosmosContainer users;
+	private CosmosContainer questions;
 	private CosmosContainer auctions;
 	private CosmosContainer bids;
 
@@ -53,6 +54,7 @@ public class CosmosDBLayer {
 		db = client.getDatabase(DB_NAME);
 		users = db.getContainer("users");
 		auctions = db.getContainer("auctions");
+		questions = db.getContainer("questions");
 		bids = db.getContainer("bids");
 
 	}
@@ -71,6 +73,11 @@ public class CosmosDBLayer {
 	public CosmosItemResponse<UserDAO> putUser(UserDAO user) {
 		init();
 		return users.createItem(user);
+	}
+
+	public CosmosItemResponse<QuestionDAO> putQuestion(QuestionDAO question) {
+		init();
+		return questions.createItem(question);
 	}
 
 	public CosmosItemResponse<UserDAO> updateUser(UserDAO user) {
