@@ -129,7 +129,12 @@ public class AuctionDAO {
 
     @Override
 	public String toString() {
+        String str = "";
+        if(winningBid == null)
+            str = "[]";
+        else 
+            str = winningBid.toString();
 		return "AuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id= " + id +", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + winningBid +", status="+ status + "]";
+				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + str +", status="+ status + "]";
 	}
 }

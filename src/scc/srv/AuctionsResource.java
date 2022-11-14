@@ -53,7 +53,7 @@ public class AuctionsResource {
             return IMG_NOT_EXIST;
         }
 
-        if (!auction.getStatus().equals(AuctionStatus.OPEN)) {
+        if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) {
             return INVALID_STATUS; 
         }
 
@@ -130,7 +130,4 @@ public class AuctionsResource {
     private boolean isValidStatus(String status) {
         return ((status.equals(AuctionStatus.OPEN.getStatus()) || status.equals(AuctionStatus.CLOSE.getStatus()) || status.equals(AuctionStatus.DELETED.getStatus())) ? true : false);
     }
-
-    
-    
 }

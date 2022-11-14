@@ -25,7 +25,7 @@ public class Auction {
     @JsonProperty("minPrice")
     private int minPrice;
     @JsonProperty("winningBid")
-    private Bid winnigBid;
+    private Bid winningBid;
     @JsonProperty("status")
     private String status;
 
@@ -41,7 +41,7 @@ public class Auction {
         this.ownerId = ownerId;
         this.endTime = endTime;
         this.minPrice = minPrice;
-        this.winnigBid = winningBid;
+        this.winningBid = winningBid;
         this.status = status;
     }
 
@@ -102,11 +102,11 @@ public class Auction {
     }
 
     public Bid getWinnigBid() {
-        return winnigBid;
+        return winningBid;
     }
 
-    public void setWinnigBid(Bid winnigBid) {
-        this.winnigBid = winnigBid;
+    public void setWinnigBid(Bid winningBid) {
+        this.winningBid = winningBid;
     }
 
     public String getStatus() {
@@ -119,7 +119,12 @@ public class Auction {
 
     @Override
 	public String toString() {
+        String str = "";
+        if (winningBid == null)
+            str =  "[]";
+        else 
+            str = winningBid.toString();
 		return "Auction [id= " + id + ", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId + ", endTime=" + endTime +  ", minPrice=" + minPrice + ", winnigBid=" + winnigBid +", status="+ status + "]";
+        + ", ownerId=" + ownerId + ", endTime=" + endTime +  ", minPrice=" + minPrice + ", winningBid=" + str +", status="+ status + "]";
 	}
 }
