@@ -30,9 +30,9 @@ public class AuctionsResource {
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
         
-        for(Object o : MainApplication.getSingletonsSet()) 
-            if(o instanceof MediaResource)
-                media = (MediaResource) o;
+        for(Object resource : MainApplication.getSingletonsSet()) 
+            if(resource instanceof MediaResource)
+                media = (MediaResource) resource;
     }
 
     /**
