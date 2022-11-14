@@ -77,5 +77,5 @@ public class User {
         return "User [id=" + id + ", name=" + name + ", pwd=" + pwd + ", photoId=" + photoId + ", channelIds="
                 + Arrays.toString(channelIds) + "]";
     }
-
+    
 }

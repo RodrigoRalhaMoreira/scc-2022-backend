@@ -25,7 +25,7 @@ public class Auction {
     @JsonProperty("minPrice")
     private int minPrice;
     @JsonProperty("winningBid")
-    private int winnigBid;
+    private Bid winnigBid;
     @JsonProperty("status")
     private String status;
 
@@ -33,7 +33,8 @@ public class Auction {
         super();
     }
 
-    public Auction(String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, int winningBid, String status) {
+    public Auction(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, Bid winningBid, String status) {
+        this.id = id;
         this.title = title;
         this.description = desription;
         this.imgId = imgId;
@@ -100,11 +101,11 @@ public class Auction {
         this.minPrice = minPrice;
     }
 
-    public int getWinnigBid() {
+    public Bid getWinnigBid() {
         return winnigBid;
     }
 
-    public void setWinnigBid(int winnigBid) {
+    public void setWinnigBid(Bid winnigBid) {
         this.winnigBid = winnigBid;
     }
 

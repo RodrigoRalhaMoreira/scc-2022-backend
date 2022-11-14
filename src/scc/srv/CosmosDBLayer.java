@@ -43,6 +43,7 @@ public class CosmosDBLayer {
 	private CosmosContainer questions;
 	private CosmosContainer auctions;
 	private CosmosContainer bids;
+	private CosmosContainer login;
 
 	public CosmosDBLayer(CosmosClient client) {
 		this.client = client;
@@ -56,6 +57,7 @@ public class CosmosDBLayer {
 		auctions = db.getContainer("auctions");
 		questions = db.getContainer("questions");
 		bids = db.getContainer("bids");
+		login = db.getContainer("login");
 
 	}
 
@@ -94,6 +96,11 @@ public class CosmosDBLayer {
 	public CosmosPagedIterable<UserDAO> getUsers() {
 		init();
 		return users.queryItems("SELECT * FROM users ", new CosmosQueryRequestOptions(), UserDAO.class);
+	}
+
+	public CosmosPagedIterable<AuctionDAO> getAuctionsByUserId(String id) {
+		init();
+		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.ownerId=\"" + id + "\"", new CosmosQueryRequestOptions(), AuctionDAO.class);
 	}
 
 	public void close() {
@@ -135,5 +142,10 @@ public class CosmosDBLayer {
 		init();
 		return auctions.upsertItem(dbAuction);
 	}
+
+    public CosmosItemResponse<LoginDAO> putLogin(LoginDAO loginDAO) {
+		init();
+		return login.createItem(loginDAO);
+    }
 
 }
