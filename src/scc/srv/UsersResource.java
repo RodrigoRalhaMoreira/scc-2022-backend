@@ -14,18 +14,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @Path("/user")
 public class UsersResource {
-    private static final String USER_NULL = "Error creating null user";
-    private static final String UPDATE_ERROR = "Error updating non-existent user";
-    private static final String DELETE_ERROR = "Error deleting non-existent user";
-
+    
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
     private ObjectMapper mapper;
+    
+    private MediaResource media;
+    
+    private static final String USER_NULL = "Error creating null user";
+    private static final String UPDATE_ERROR = "Error updating non-existent user";
+    private static final String DELETE_ERROR = "Error deleting non-existent user";
+    private static String IMG_NOT_EXIST = "Image does not exist";
 
     public UsersResource() {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
+        
+        for(Object o : MainApplication.getSingletonsSet())
+            if(o instanceof MediaResource)
+                media = (MediaResource) o;
     }
 
     /**
@@ -35,8 +43,15 @@ public class UsersResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(User user) {
+        
         if (user == null)
             return USER_NULL;
+        
+        //verify if imgId exists
+        if (!media.verifyImgId(user.getPhotoId())) {
+            System.out.println(IMG_NOT_EXIST);
+            return IMG_NOT_EXIST;
+        }
 
         UserDAO userDao = new UserDAO(user);
         try {
@@ -59,6 +74,13 @@ public class UsersResource {
         if (user == null) {
             return USER_NULL;
         }
+        
+        //verify if imgId exists
+        if (!media.verifyImgId(user.getPhotoId())) {
+            System.out.println(IMG_NOT_EXIST);
+            return IMG_NOT_EXIST;
+        }
+        
         UserDAO userDao = new UserDAO(user);
         try {
             String res = jedis_instance.get("user:" + user.getId());
