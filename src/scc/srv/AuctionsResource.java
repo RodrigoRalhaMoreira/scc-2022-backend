@@ -17,17 +17,22 @@ public class AuctionsResource {
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
     private ObjectMapper mapper;
+    
+    private MediaResource media;
 
     private static String AUCTION_NULL = "Null auction exception";
     private static String AUCTION_NOT_EXIST = "Auction does not exist";
     private static String USER_NOT_EXIST = "User does not exist";
     private static String IMG_NOT_EXIST = "Image does not exist";
 
-
     public AuctionsResource() {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
+        
+        for(Object resource : MainApplication.getSingletonsSet()) 
+            if(resource instanceof MediaResource)
+                media = (MediaResource) resource;
     }
 
     /**
@@ -45,8 +50,9 @@ public class AuctionsResource {
             System.out.println(USER_NOT_EXIST);
             return USER_NOT_EXIST;
         }
+        
         //verify if imgId exists
-        if (!verifyImgId(auction.getImgId())) {
+        if (!media.verifyImgId(auction.getImgId())) {
             System.out.println(IMG_NOT_EXIST);
             return IMG_NOT_EXIST;
         }
@@ -101,10 +107,6 @@ public class AuctionsResource {
             db_instance.updateAuction(dbAuction);
             return dbAuction.getId();
         }
-    }
-    
-    private boolean verifyImgId(String ImgId) {
-        return true;
     }
     
 }

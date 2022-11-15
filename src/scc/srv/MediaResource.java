@@ -26,24 +26,22 @@ public class MediaResource {
             + "EndpointSuffix=core.windows.net";
 
     // Get container client
-    private BlobContainerClient containerClient = new BlobContainerClientBuilder()
-                                                .connectionString(storageConnectionString)
-                                                .containerName("images")
-                                                .buildClient();
+    private BlobContainerClient containerClient = new BlobContainerClientBuilder().connectionString(storageConnectionString)
+                                                      .containerName("images").buildClient();
     
-	/**
-	 * Post a new image.The id of the image is its hash.
-	 */
-	@POST
-	@Path("/")
-	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	@Produces(MediaType.APPLICATION_JSON)
-	public String upload(byte[] contents) {
-	    
-	    if( contents == null) {
+    /**
+     * Post a new image.The id of the image is its hash.
+     */
+    @POST
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String upload(byte[] contents) {
+        
+        if( contents == null) {
             System.out.println( "Use: java scc.utils.UploadToStorage filename");
         }
-	    
+        
         String filename = Hash.of(contents);
         
         try {
@@ -63,16 +61,16 @@ public class MediaResource {
         }
         
         return filename;
-	}
+    }
 
-	/**
-	 * Return the contents of an image. Throw an appropriate error message if
-	 * id does not exist.
-	 */
-	@GET
-	@Path("/{id}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public byte[] download(@PathParam("id") String id) {
+    /**
+     * Return the contents of an image. Throw an appropriate error message if
+     * id does not exist.
+     */
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public byte[] download(@PathParam("id") String id) {
 
         try {
 
@@ -91,17 +89,17 @@ public class MediaResource {
         }
         
         return null;
-	}
+    }
 
-	/**
-	 * Lists the id of images stored.
-	 */
-	@GET
-	@Path("/list")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> list() {
-	    
-	    List<String> list = new ArrayList<>();
+    /**
+     * Lists the id of images stored.
+     */
+    @GET
+    @Path("/list")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> list() {
+        
+        List<String> list = new ArrayList<>();
         
         try {
 
@@ -118,6 +116,19 @@ public class MediaResource {
         }
         
         return null;
-	} 
+    } 
+    
+    public boolean verifyImgId(String ImgId) {
+        
+        List<String> list = new ArrayList<>();
+       
+        // Get client to blob
+        PagedIterable<BlobItem> blob = containerClient.listBlobs();
+
+        for(BlobItem item : blob)
+            list.add(item.getName());
+        
+        return list.contains(ImgId);
+    }
 }
 
