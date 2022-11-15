@@ -24,6 +24,8 @@ public class UsersResource {
     private static final String DELETE_ERROR = "Error deleting non-existent user";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
+    private static final String IMG_NOT_EXIST = "Image does not exist";
+    private static final String ALREADY_AUTH = "User already authenticated";
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
@@ -143,6 +145,8 @@ public class UsersResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String login(Login login) {
+
+        
         UserDAO user = null;
         if (!userExistsInDB(login.getId())) {
             return INVALID_LOGIN;
@@ -151,7 +155,10 @@ public class UsersResource {
 
             if (!user.getPwd().equals(login.getPwd()))
                 return INVALID_LOGIN;
-   
+            
+            if (db_instance.getLoginById(login.getId()).iterator().hasNext())
+                return ALREADY_AUTH;
+            
             LoginDAO loginDAO = new LoginDAO(login);
 
             db_instance.putLogin(loginDAO);
