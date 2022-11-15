@@ -22,6 +22,7 @@ public class UsersResource {
     private static final String USER_NULL = "Error creating null user";
     private static final String UPDATE_ERROR = "Error updating non-existent user";
     private static final String DELETE_ERROR = "Error deleting non-existent user";
+    private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
 
     private static CosmosDBLayer db_instance;
@@ -29,11 +30,6 @@ public class UsersResource {
     private ObjectMapper mapper;
     
     private MediaResource media;
-    
-    private static final String USER_NULL = "Error creating null user";
-    private static final String UPDATE_ERROR = "Error updating non-existent user";
-    private static final String DELETE_ERROR = "Error deleting non-existent user";
-    private static String IMG_NOT_EXIST = "Image does not exist";
 
     public UsersResource() {
         db_instance = CosmosDBLayer.getInstance();
