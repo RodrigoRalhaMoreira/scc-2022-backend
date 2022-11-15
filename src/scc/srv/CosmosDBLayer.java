@@ -1,5 +1,7 @@
 package scc.srv;
 
+import java.util.Set;
+
 import com.azure.cosmos.ConsistencyLevel;
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosClientBuilder;
@@ -153,6 +155,13 @@ public class CosmosDBLayer {
         return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
                 new CosmosQueryRequestOptions(),
                 LoginDAO.class);
+    }
+
+    public CosmosPagedIterable<LoginDAO> getLoginById(String id) {
+		init();
+        return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
+				new CosmosQueryRequestOptions(),
+				LoginDAO.class);
     }
 
 }

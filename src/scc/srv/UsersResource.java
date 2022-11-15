@@ -27,6 +27,8 @@ public class UsersResource {
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    private static final String IMG_NOT_EXIST = "Image does not exist";
+    private static final String ALREADY_AUTH = "User already authenticated";
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;

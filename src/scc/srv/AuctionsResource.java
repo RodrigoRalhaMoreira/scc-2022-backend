@@ -28,6 +28,13 @@ public class AuctionsResource {
     private static final String USER_NOT_EXIST = "User does not exist";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_STATUS = "Invalid status";
+
+    private static final String NULL_ID = "Null id exception";
+    private static final String NULL_TITLE = "Null title exception";
+    private static final String NULL_IMAGE = "Null imageId exception";
+    private static final String NULL_OWNERID = "Null ownerId exception";
+    private static final String NULL_ENDTIME = "Null endTime exception";
+    private static final String NULL_STATUS = "Null status exception";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
     
@@ -133,8 +140,9 @@ public class AuctionsResource {
             return ((((AuctionDAO) it.next()).toAuction()).toString());
         return null;
     }
-    
+
     // -----------------------------------------------------  PRIVATE METHODS ---------------------------------------------
+
 
     private boolean isValidStatus(String status) {
         return ((status.equals(AuctionStatus.OPEN.getStatus()) || 
