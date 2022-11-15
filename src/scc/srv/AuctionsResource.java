@@ -1,15 +1,13 @@
 package scc.srv;
 
-import java.lang.reflect.Field;
-import java.util.Iterator;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import scc.cache.RedisCache;
 
 import jakarta.ws.rs.*;
-
-import jakarta.ws.rs.core.MediaType;
+import java.util.Iterator;
+import java.lang.reflect.Field;
 import redis.clients.jedis.Jedis;
-import scc.cache.RedisCache;
+import jakarta.ws.rs.core.MediaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Resource for managing auction.
@@ -28,6 +26,7 @@ public class AuctionsResource {
     private static final String USER_NOT_EXIST = "User does not exist";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_STATUS = "Invalid auction status";
+    private static final String AUCTION_ALREADY_EXISTS = "AuctionId already exists";
 
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
@@ -144,6 +143,10 @@ public class AuctionsResource {
 
         if (auction == null)
             return AUCTION_NULL;
+
+        String res = jedis_instance.get("auction:" + auction.getId());
+        if (res != null)
+            return AUCTION_ALREADY_EXISTS;
 
         // verify that fields are different from null
         for (Field f : auction.getClass().getDeclaredFields()) {
