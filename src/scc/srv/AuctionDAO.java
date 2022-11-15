@@ -13,7 +13,7 @@ public class AuctionDAO {
     private String ownerId;
     private Date endTime;
     private int minPrice;
-    private int winnigBid;
+    private Bid winningBid;
     private String status;
 
     public AuctionDAO() {}
@@ -22,7 +22,7 @@ public class AuctionDAO {
         this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getEndTime(), a.getMinPrice(), a.getWinnigBid(), a.getStatus());
     }
 
-    public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, int winningBid, String status) {
+    public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, Bid winningBid, String status) {
         super();
         this.id = id;
         this.title = title;
@@ -31,7 +31,7 @@ public class AuctionDAO {
         this.ownerId = ownerId;
         this.endTime = endTime;
         this.minPrice = minPrice;
-        this.winnigBid = winningBid;
+        this.winningBid = winningBid;
         this.status = status;
     }
     
@@ -107,12 +107,12 @@ public class AuctionDAO {
         this.minPrice = minPrice;
     }
 
-    public int getWinnigBid() {
-        return winnigBid;
+    public Bid getWinnigBid() {
+        return winningBid;
     }
 
-    public void setWinnigBid(int winnigBid) {
-        this.winnigBid = winnigBid;
+    public void setWinnigBid(Bid winnigBid) {
+        this.winningBid = winnigBid;
     }
 
     public String getStatus() {
@@ -123,9 +123,18 @@ public class AuctionDAO {
         this.status = status;
     }
 
+    public Auction toAuction() {
+        return new Auction(id, title, description, imgId, ownerId, endTime, minPrice, winningBid, status);
+    }
+
     @Override
 	public String toString() {
+        String str = "";
+        if(winningBid == null)
+            str = "[]";
+        else 
+            str = winningBid.toString();
 		return "AuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id= " + id +", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + winnigBid +", status="+ status + "]";
+				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + str +", status="+ status + "]";
 	}
 }

@@ -8,7 +8,7 @@ import jakarta.ws.rs.core.Application;
 public class MainApplication extends Application {
     private static Set<Object> singletons = new HashSet<Object>();
     private Set<Class<?>> resources = new HashSet<Class<?>>();
-
+  
     public MainApplication() {
         resources.add(ControlResource.class);
         resources.add(MediaResource.class);

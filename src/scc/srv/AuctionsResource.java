@@ -1,5 +1,7 @@
 package scc.srv;
 
+import java.util.Iterator;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.ws.rs.*;
@@ -24,6 +26,7 @@ public class AuctionsResource {
     private static String AUCTION_NOT_EXIST = "Auction does not exist";
     private static String USER_NOT_EXIST = "User does not exist";
     private static String IMG_NOT_EXIST = "Image does not exist";
+    private static String INVALID_STATUS = "Invalid status";
 
     public AuctionsResource() {
         db_instance = CosmosDBLayer.getInstance();
@@ -57,6 +60,10 @@ public class AuctionsResource {
             return IMG_NOT_EXIST;
         }
 
+        if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) {
+            return INVALID_STATUS; 
+        }
+
         // Create the user to store in the db and cache
         AuctionDAO dbAuction = new AuctionDAO(auction);
 
@@ -87,6 +94,10 @@ public class AuctionsResource {
             System.out.println(USER_NOT_EXIST);
             return USER_NOT_EXIST;
         }
+
+        if(!isValidStatus(auction.getStatus()))
+            return INVALID_STATUS;
+
         AuctionDAO dbAuction = new AuctionDAO(auction);
 
         try {
@@ -108,5 +119,22 @@ public class AuctionsResource {
             return dbAuction.getId();
         }
     }
-    
+
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getAuction(@PathParam("id") String id) {
+        Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
+        if (it.hasNext())
+            return ((((AuctionDAO) it.next()).toAuction()).toString());
+        return null;
+    }
+
+    private boolean verifyImgId(String ImgId) {
+        return true;
+    }
+
+    private boolean isValidStatus(String status) {
+        return ((status.equals(AuctionStatus.OPEN.getStatus()) || status.equals(AuctionStatus.CLOSE.getStatus()) || status.equals(AuctionStatus.DELETED.getStatus())) ? true : false);
+    }
 }

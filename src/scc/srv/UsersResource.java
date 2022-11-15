@@ -6,6 +6,10 @@ import jakarta.ws.rs.*;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -14,7 +18,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @Path("/user")
 public class UsersResource {
-    
+
+    private static final String USER_NULL = "Error creating null user";
+    private static final String UPDATE_ERROR = "Error updating non-existent user";
+    private static final String DELETE_ERROR = "Error deleting non-existent user";
+    private static final String INVALID_LOGIN = "UserId or password incorrect";
+
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
     private ObjectMapper mapper;
@@ -114,6 +123,44 @@ public class UsersResource {
         }
         jedis_instance.del("user:" + id);
         return removed > 0 ? id : DELETE_ERROR;
+    }
+
+    @Path("/{id}/auctions")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getAuctionsOfUser(@PathParam("id") String id) {
+        List<String> auctions = new ArrayList<>();
+        Iterator<AuctionDAO> it = db_instance.getAuctionsByUserId(id).iterator();
+        while(it.hasNext()) {
+            auctions.add((it.next().toAuction()).toString());
+        }
+        return auctions;
+    }
+
+    /**
+     * Login Method
+     * @param login
+     * @return
+     */
+    @Path("/auth")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String login(Login login) {
+        UserDAO user = null;
+        if (!userExistsInDB(login.getId())) {
+            return INVALID_LOGIN;
+        } else {
+            user = db_instance.getUserById(login.getId()).iterator().next();
+
+            if (!user.getPwd().equals(login.getPwd()))
+                return INVALID_LOGIN;
+   
+            LoginDAO loginDAO = new LoginDAO(login);
+
+            db_instance.putLogin(loginDAO);
+            return loginDAO.getId();
+        }
     }
 
     private boolean userExistsInDB(String userId) {
