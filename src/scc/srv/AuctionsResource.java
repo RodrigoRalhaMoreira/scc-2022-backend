@@ -22,11 +22,11 @@ public class AuctionsResource {
     
     private MediaResource media;
 
-    private static String AUCTION_NULL = "Null auction exception";
-    private static String AUCTION_NOT_EXIST = "Auction does not exist";
-    private static String USER_NOT_EXIST = "User does not exist";
-    private static String IMG_NOT_EXIST = "Image does not exist";
-    private static String INVALID_STATUS = "Invalid status";
+    private static final String AUCTION_NULL = "Null auction exception";
+    private static final String AUCTION_NOT_EXIST = "Auction does not exist";
+    private static final String USER_NOT_EXIST = "User does not exist";
+    private static final String IMG_NOT_EXIST = "Image does not exist";
+    private static final String INVALID_STATUS = "Invalid status";
 
     public AuctionsResource() {
         db_instance = CosmosDBLayer.getInstance();
@@ -128,10 +128,6 @@ public class AuctionsResource {
         if (it.hasNext())
             return ((((AuctionDAO) it.next()).toAuction()).toString());
         return null;
-    }
-
-    private boolean verifyImgId(String ImgId) {
-        return true;
     }
 
     private boolean isValidStatus(String status) {
