@@ -129,6 +129,8 @@ public class UsersResource {
         return removed > 0 ? id : DELETE_ERROR;
     }
 
+    // not sure if we want this information cached (map with string(UserId) ->
+    // set<Auctions>)
     @Path("/{id}/auctions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
