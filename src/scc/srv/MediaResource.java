@@ -20,6 +20,9 @@ import jakarta.ws.rs.core.MediaType;
 @Path("/media")
 public class MediaResource {
 
+    private static final String NULL_IMAGE = "Null image exception";
+    private static final String FILE_UPLOADED = "File updloaded: ";
+    
     // Get connection string in the storage access keys page
     private static final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;"
             + "AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;"
@@ -28,6 +31,7 @@ public class MediaResource {
     // Get container client
     private BlobContainerClient containerClient = new BlobContainerClientBuilder().connectionString(storageConnectionString)
                                                       .containerName("images").buildClient();
+    
     
     /**
      * Post a new image.The id of the image is its hash.
@@ -38,9 +42,8 @@ public class MediaResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String upload(byte[] contents) {
         
-        if( contents == null) {
-            System.out.println( "Use: java scc.utils.UploadToStorage filename");
-        }
+        if(contents == null) 
+            return NULL_IMAGE;
         
         String filename = Hash.of(contents);
         
@@ -54,13 +57,11 @@ public class MediaResource {
             // Upload contents from BinaryData (check documentation for other alternatives)
             blob.upload(data);
             
-            System.out.println("File updloaded : " + filename);
-            
         } catch( Exception e) {
             e.printStackTrace();
         }
         
-        return filename;
+        return FILE_UPLOADED + filename;
     }
 
     /**

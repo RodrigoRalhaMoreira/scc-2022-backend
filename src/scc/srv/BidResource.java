@@ -3,6 +3,7 @@ package scc.srv;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -19,27 +20,36 @@ public class BidResource {
     private static final String USER_NOT_EXISTS = "User does not exist";
     private static final String AUCTION_NOT_EXISTS = "Auction does not exist";
     
-    private static final String NULL_ID = "Null id exception";
-    private static final String NULL_AUCTIONID = "Null auctionId exception";
-    private static final String NULL_USERID = "Null userId exception";
     private static final String NEGATIVE_VALUE = "value can not be negative or zero";
-
+    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    private static final String LOWER_BIDVALUE = "Current bid value has to be higher than "
+                                                                    + "current winning bid value for that auction";
+    
+    
     private static CosmosDBLayer db_instance;
-
+    
+    private AuctionsResource auctions;
+    
     // Improvements to be made. If we have "id" of auction as PathParam we should
     // not have to pass it as param in POST request.
 
     public BidResource() {
         db_instance = CosmosDBLayer.getInstance();
+        
+        for(Object resource : MainApplication.getSingletonsSet()) 
+            if(resource instanceof AuctionsResource)
+                auctions = (AuctionsResource) resource;
     }
 
     /**
      * Creates a new bid.
+     * @throws IllegalAccessException 
+     * @throws IllegalArgumentException 
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Bid bid) {
+    public String create(Bid bid) throws IllegalArgumentException, IllegalAccessException {
         
         /**
          * TODO
@@ -48,17 +58,23 @@ public class BidResource {
          */
         
         String result = checkBid(bid);
+        Bid auctionWinningBid = auctions.getAuctionWinningBid(bid.getAuctionId());
         
         if(result != null)
             return result;
         
-        else {
-            // Create the bid to store in the database
-            BidDAO dbbid = new BidDAO(bid);
-    
-            db_instance.putBid(dbbid);
-            return dbbid.getId();
-        }
+        // bid value has to be higher than current winning bid for that auction
+        if(auctionWinningBid != null && auctionWinningBid.getValue() >= bid.getValue())
+            return LOWER_BIDVALUE;
+        
+        // TIAGO ---> AZURE FUNCTION
+        
+        // Create the bid to store in the database
+        BidDAO dbbid = new BidDAO(bid);
+        // AZURE FUNCTION
+        
+        db_instance.putBid(dbbid);
+        return dbbid.getId();
     }
 
     /**
@@ -94,32 +110,28 @@ public class BidResource {
         return auctionIt.iterator().hasNext();
     }
     
-    private String checkBid(Bid bid) {
-        
-        String result = null;
+    private String checkBid(Bid bid) throws IllegalArgumentException, IllegalAccessException{
         
         if (bid == null)
-            result = BID_NULL;
+            return BID_NULL;
         
-        else if (bid.getId() == null)
-            result = NULL_ID;
+        // verify that fields are different from null
+        for (Field f : bid.getClass().getDeclaredFields()) {
+            f.setAccessible(true);
+            if (f.get(bid) == null)
+                return String.format(NULL_FIELD_EXCEPTION, f.getName());
+        }
         
-        else if (bid.getAuctionId() == null)
-            result = NULL_AUCTIONID;
+        if (bid.getValue() <= 0)
+            return NEGATIVE_VALUE;
         
-        else if (bid.getUserId() == null)
-            result = NULL_USERID;
-        
-        else if (bid.getValue() <= 0)
-            result = NEGATIVE_VALUE;
-        
-        else if (!userExistsInDB(bid.getUserId()))
+        if (!userExistsInDB(bid.getUserId()))
             return USER_NOT_EXISTS;
 
         // this does not make sense we're only doing this for the moment
-        else if (!auctionExistsInDB(bid.getAuctionId()))
+        if (!auctionExistsInDB(bid.getAuctionId()))
             return AUCTION_NOT_EXISTS;
         
-        return result;
+        return null;
     }
 }

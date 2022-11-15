@@ -19,8 +19,8 @@ public class AuctionsResource {
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
-    private ObjectMapper mapper;
     
+    private ObjectMapper mapper;
     private MediaResource media;
 
     private static final String AUCTION_NULL = "Null auction exception";
@@ -28,10 +28,9 @@ public class AuctionsResource {
     private static final String USER_NOT_EXIST = "User does not exist";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_STATUS = "Invalid status";
-    
-    private static final String NULL = "Null ";
-    private static final String EXCEPTION = " exception";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
+    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    
     
     public AuctionsResource() {
         db_instance = CosmosDBLayer.getInstance();
@@ -54,32 +53,28 @@ public class AuctionsResource {
     public String create(Auction auction) throws IllegalArgumentException, IllegalAccessException {
         
         // Winning bids start by default with the value of null
+        String error = checkAuction(auction);
         
-        String result = checkAuction(auction);
+        if(error != null)
+            return error;
+         
+        // Status special verification when creating an auction
+        if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) 
+            return INVALID_STATUS; 
         
-        if(result != null)
-            return result;
-        
-        else {
-            
-            // Status special verification when creating an auction
-            if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) 
-                result = INVALID_STATUS; 
-            
-            // Create the user to store in the database and cache
-            AuctionDAO dbAuction = new AuctionDAO(auction);
-    
-            try {
-                jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
-            } catch (Exception e) {
-                // TODO: handle exception
-            }
-    
-            db_instance.putAuction(dbAuction);
-            return dbAuction.getTitle();
-        }
-    }
+        // Create the user to store in the database and cache
+        AuctionDAO dbAuction = new AuctionDAO(auction);
 
+        try {
+            jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+
+        db_instance.putAuction(dbAuction);
+        return dbAuction.getTitle();
+    }
+    
     /**
      * Updates an auction. Throw an appropriate error message if
      * id does not exist.
@@ -91,13 +86,21 @@ public class AuctionsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String update(Auction auction) throws IllegalArgumentException, IllegalAccessException {
         
-        String result = checkAuction(auction);
+        String error = checkAuction(auction);
         
-        if(result != null)
-            return result;
-
+        if(error != null)
+            return error;
+        
+        // Actual status
+        String currentStatus = getStatusAuction(auction.getId());
+        int currentStatusValue = getStatusValue(currentStatus); // Value
+        
+        // New Status
+        String newStatus = auction.getStatus(); // or dbAuction --> works as well
+        int newStatusValue = getStatusValue(newStatus); // Value
+        
         // Status special verification when updating an auction
-        if(!isValidStatus(auction.getStatus()))
+        if(!isValidStatus(auction.getStatus()) || currentStatusValue > newStatusValue)
             return INVALID_STATUS;
         
         // Checks if auctionId exists
@@ -105,7 +108,7 @@ public class AuctionsResource {
             return AUCTION_NOT_EXIST;
 
         AuctionDAO dbAuction = new AuctionDAO(auction);
-
+        
         try {
             String res = jedis_instance.get("auction:"+ auction.getId());
             if (res != auction.getId() && res != null) {
@@ -139,44 +142,48 @@ public class AuctionsResource {
                 status.equals(AuctionStatus.DELETED.getStatus())) ? true : false);
     }
     
+    private int getStatusValue(String status) {
+        
+        for(AuctionStatus auctionStatus : AuctionStatus.values())
+            if(status.equals(auctionStatus.getStatus()))
+                return auctionStatus.getValue();
+        
+        return -1;
+    }
+    
+    public Bid getAuctionWinningBid(String id) {
+        Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
+        if (it.hasNext())
+            return ((((AuctionDAO) it.next()).toAuction().getWinnigBid()));
+        return null;
+    }
+    
+    private String getStatusAuction(String id) {
+        Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
+        if (it.hasNext())
+            return ((((AuctionDAO) it.next()).toAuction().getStatus()));
+        return null;
+    }
+    
     private String checkAuction(Auction auction) throws IllegalArgumentException, IllegalAccessException {
-        
-        if (auction == null) 
+
+        if (auction == null)
             return AUCTION_NULL;
-        
+
+        // verify that fields are different from null
         for (Field f : auction.getClass().getDeclaredFields()) {
             f.setAccessible(true);
-            if (f.get(auction) == null && !f.getName().equals("description") && !f.getName().equals("winnigBid"))
-                return NULL + f.getName() + EXCEPTION;
+            if (f.get(auction) == null && !f.getName().matches("description|winningBid"))
+                return String.format(NULL_FIELD_EXCEPTION, f.getName());
         }
-        
-        /**
-        else if (auction.getId() == null)
-            result = NULL_ID;
-        
-        else if (auction.getTitle() == null)
-            result = NULL_TITLE;
-        
-        else if (auction.getImgId() == null)
-            result = NULL_IMAGE;
-        
-        else if (auction.getOwnerId() == null)
-            result = NULL_OWNERID;
-        
-        else if (auction.getEndTime() == null)
-            result = NULL_ENDTIME;
-        
-        else if (auction.getStatus() == null)
-            result = NULL_STATUS;
-        **/
-        
+
         if (auction.getMinPrice() <= 0)
             return NEGATIVE_MINPRICE;
-        
+
         if (!db_instance.getUserById(auction.getOwnerId()).iterator().hasNext())
             return USER_NOT_EXIST;
-        
-        //verify if imgId exists in the database
+
+        // verify if imgId exists in the database
         if (!media.verifyImgId(auction.getImgId()))
             return IMG_NOT_EXIST;
         
