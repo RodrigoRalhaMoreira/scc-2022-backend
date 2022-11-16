@@ -5,15 +5,15 @@
   <groupId>pt.unl.fct.di.scc</groupId>  
   <artifactId>scc2223-lab1</artifactId>  
   <version>1.0</version>  
-  <packaging>war</packaging>  
-  <properties> 
+  <packaging>jar</packaging>  
+  <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
     <authors>XXXXX-YYYYY-ZZZZZ</authors>
     <java.version>11</java.version>
 	<functionAppName>scc2223funwesteuropenmp-drt</functionAppName>
 	<functionAppRegion>westeurope</functionAppRegion>
 	<functionPricingTier>B1</functionPricingTier>
-	<functionResourceGroup>scc23-rg-westeurope-nmp-drt</functionResourceGroup>
+	<functionResourceGroup>scc23-rg-westeurope-groupdrt</functionResourceGroup>
   </properties>  
   <dependencies> 
     <dependency> 
