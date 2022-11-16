@@ -10,6 +10,10 @@ mvn clean compile package azure-webapp:deploy
 
 Then you can make the requests on postman
 
+To run azure functions:
+-> Change pom from <packaging>war<packaging> to <packaging>jar<packaging>
+-> run: mvn clean compile package azure-functions:deploy
+
 Developed by:
 
 Rodrigo Moreira 57943 - rr.moreira@campus.fct.unl.pt
