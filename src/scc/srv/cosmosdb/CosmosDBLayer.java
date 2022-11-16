@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.srv.cosmosdb;
 
 import java.util.Set;
 
@@ -12,6 +12,12 @@ import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.util.CosmosPagedIterable;
+
+import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.srv.cosmosdb.models.BidDAO;
+import scc.srv.cosmosdb.models.LoginDAO;
+import scc.srv.cosmosdb.models.QuestionDAO;
+import scc.srv.cosmosdb.models.UserDAO;
 
 public class CosmosDBLayer {
     private static final String CONNECTION_URL = "https://scc23groupdrt.documents.azure.com:443/";
@@ -155,13 +161,6 @@ public class CosmosDBLayer {
         return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
                 new CosmosQueryRequestOptions(),
                 LoginDAO.class);
-    }
-
-    public CosmosPagedIterable<LoginDAO> getLoginById(String id) {
-		init();
-        return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
-				new CosmosQueryRequestOptions(),
-				LoginDAO.class);
     }
 
 }

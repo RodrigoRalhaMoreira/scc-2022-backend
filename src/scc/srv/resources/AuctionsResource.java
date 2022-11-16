@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.srv.resources;
 
 import java.lang.reflect.Field;
 import java.util.Iterator;
@@ -10,6 +10,12 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import redis.clients.jedis.Jedis;
 import scc.cache.RedisCache;
+import scc.srv.MainApplication;
+import scc.srv.cosmosdb.CosmosDBLayer;
+import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.srv.dataclasses.Auction;
+import scc.srv.dataclasses.AuctionStatus;
+import scc.srv.dataclasses.Bid;
 
 /**
  * Resource for managing auction.
@@ -69,15 +75,14 @@ public class AuctionsResource {
         if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) 
             return INVALID_STATUS; 
         
-        // Create the user to store in the database and cache
-        AuctionDAO dbAuction = new AuctionDAO(auction);
-
         try {
-            jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
+            jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(auction));
         } catch (Exception e) {
             // TODO: handle exception
         }
-
+        
+        // Create the user to store in the database and cache
+        AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.putAuction(dbAuction);
         return dbAuction.getTitle();
     }
@@ -121,7 +126,7 @@ public class AuctionsResource {
             if (res != auction.getId() && res != null) {
                 jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
                 db_instance.updateAuction(dbAuction);
-                return dbAuction.getId();
+                return "RES VALUE ---> " + res;
             }
         } catch (Exception e) {
             // TODO: handle exception

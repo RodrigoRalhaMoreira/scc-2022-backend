@@ -1,31 +1,30 @@
-package scc.srv;
+package scc.srv.dataclasses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents a auctions questions and replies, should be named Messages but we
- * followed the given documentation.
+ * Represents an auction bid.
  */
 
-public class Question {
+public class Bid {
     @JsonProperty("id")
     private String id;
     @JsonProperty("auctionId")
     private String auctionId;
     @JsonProperty("userId")
     private String userId;
-    @JsonProperty("message")
-    private String message;
+    @JsonProperty("value")
+    private int value;
 
-    public Question() {
+    public Bid() {
         super();
     }
 
-    public Question(String id, String auctionId, String userId, String message) {
+    public Bid(String id, String auctionId, String userId, int value) {
         this.id = id;
         this.auctionId = auctionId;
         this.userId = userId;
-        this.message = message;
+        this.value = value;
     }
 
     public String getId() {
@@ -40,14 +39,14 @@ public class Question {
         return userId;
     }
 
-    public String getMessage() {
-        return message;
+    public int getValue() {
+        return value;
     }
 
     @Override
     public String toString() {
-        return "Question [id=" + id + ", auctionId=" + auctionId + ", userId=" + userId + ", message="
-                + message + "]";
+        return "Bid [id=" + id + ", auctionId=" + auctionId + ", userId=" + userId + ", value="
+                + value + "]";
     }
 
 }

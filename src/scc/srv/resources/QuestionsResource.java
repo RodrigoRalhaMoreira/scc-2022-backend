@@ -1,7 +1,12 @@
-package scc.srv;
+package scc.srv.resources;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import scc.srv.cosmosdb.CosmosDBLayer;
+import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.srv.cosmosdb.models.QuestionDAO;
+import scc.srv.cosmosdb.models.UserDAO;
+import scc.srv.dataclasses.Question;
 
 import java.lang.reflect.Field;
 

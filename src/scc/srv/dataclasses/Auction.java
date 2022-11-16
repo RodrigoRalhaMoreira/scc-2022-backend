@@ -1,29 +1,39 @@
-package scc.srv;
+package scc.srv.dataclasses;
 
 import java.util.Date;
 
-public class AuctionDAO {
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    private String _rid;
-    private String _ts;
+/**
+ * Represents an Auction
+ */
+
+public class Auction {
+
+    @JsonProperty("id")
     private String id;
+    @JsonProperty("title")
     private String title;
+    @JsonProperty("description")
     private String description;
+    @JsonProperty("imgId")
     private String imgId;
+    @JsonProperty("ownerId")
     private String ownerId;
+    @JsonProperty("endTime")
     private Date endTime;
+    @JsonProperty("minPrice")
     private int minPrice;
+    @JsonProperty("winningBid")
     private Bid winningBid;
+    @JsonProperty("status")
     private String status;
 
-    public AuctionDAO() {}
-
-    public AuctionDAO(Auction a) {
-        this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getEndTime(), a.getMinPrice(), a.getWinnigBid(), a.getStatus());
+    public Auction() {
+        super();
     }
 
-    public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, Bid winningBid, String status) {
-        super();
+    public Auction(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, Bid winningBid, String status) {
         this.id = id;
         this.title = title;
         this.description = desription;
@@ -34,22 +44,6 @@ public class AuctionDAO {
         this.winningBid = winningBid;
         this.status = status;
     }
-    
-	public String get_rid() {
-		return _rid;
-	}
-
-	public void set_rid(String _rid) {
-		this._rid = _rid;
-	}
-
-	public String get_ts() {
-		return _ts;
-	}
-
-	public void set_ts(String _ts) {
-		this._ts = _ts;
-	}
 
     public String getId() {
         return id;
@@ -79,16 +73,12 @@ public class AuctionDAO {
         return imgId;
     }
 
-    public void setImg(String imgId) {
+    public void setImgId(String imgId) {
         this.imgId = imgId;
     }
 
     public String getOwnerId() {
         return ownerId;
-    }
-
-    public void setOwner(String ownerId) {
-        this.ownerId = ownerId;
     }
 
     public Date getEndTime() {
@@ -97,6 +87,10 @@ public class AuctionDAO {
 
     public void setEndTime(Date endTime) {
         this.endTime = endTime;
+    }
+
+    public void setOwner(String ownerId) {
+        this.ownerId = ownerId;
     }
 
     public int getMinPrice() {
@@ -111,8 +105,8 @@ public class AuctionDAO {
         return winningBid;
     }
 
-    public void setWinnigBid(Bid winnigBid) {
-        this.winningBid = winnigBid;
+    public void setWinnigBid(Bid winningBid) {
+        this.winningBid = winningBid;
     }
 
     public String getStatus() {
@@ -123,18 +117,14 @@ public class AuctionDAO {
         this.status = status;
     }
 
-    public Auction toAuction() {
-        return new Auction(id, title, description, imgId, ownerId, endTime, minPrice, winningBid, status);
-    }
-
     @Override
 	public String toString() {
         String str = "";
-        if(winningBid == null)
-            str = "[]";
+        if (winningBid == null)
+            str =  "[]";
         else 
             str = winningBid.toString();
-		return "AuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id= " + id +", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + str +", status="+ status + "]";
+		return "Auction [id= " + id + ", title=" + title + ", description=" + description + ", imgId=" + imgId
+        + ", ownerId=" + ownerId + ", endTime=" + endTime +  ", minPrice=" + minPrice + ", winningBid=" + str +", status="+ status + "]";
 	}
 }

@@ -1,4 +1,6 @@
-package scc.srv;
+package scc.srv.cosmosdb.models;
+
+import scc.srv.dataclasses.Question;
 
 /**
  * Represents a Question, as stored in the database

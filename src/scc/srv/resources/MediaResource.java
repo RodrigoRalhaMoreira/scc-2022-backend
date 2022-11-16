@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.srv.resources;
 
 import jakarta.ws.rs.*;
 import scc.utils.Hash;

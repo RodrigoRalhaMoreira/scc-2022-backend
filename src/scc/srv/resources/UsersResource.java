@@ -1,7 +1,13 @@
-package scc.srv;
+package scc.srv.resources;
 
 import scc.cache.RedisCache;
-
+import scc.srv.MainApplication;
+import scc.srv.cosmosdb.CosmosDBLayer;
+import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.srv.cosmosdb.models.LoginDAO;
+import scc.srv.cosmosdb.models.UserDAO;
+import scc.srv.dataclasses.Login;
+import scc.srv.dataclasses.User;
 import jakarta.ws.rs.*;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
@@ -27,7 +33,6 @@ public class UsersResource {
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
-    private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String ALREADY_AUTH = "User already authenticated";
 
     private static CosmosDBLayer db_instance;
