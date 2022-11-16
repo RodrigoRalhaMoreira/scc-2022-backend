@@ -159,7 +159,7 @@ public class UsersResource {
 
         User user = null;
         String user_res = jedis_instance.get("user:" + login.getId());
-        if (user_res != null)
+        if (user_res == null)
             return INVALID_LOGIN;
 
         user = mapper.readValue(user_res, User.class);
