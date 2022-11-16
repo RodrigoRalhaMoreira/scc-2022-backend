@@ -1,4 +1,4 @@
-package scc.serverless;
+package scc.serverless.main;
 
 import com.microsoft.azure.functions.annotation.*;
 
@@ -10,16 +10,12 @@ import com.microsoft.azure.functions.*;
 /**
  * Azure Functions with Blob Trigger.
  */
-public class BlobStoreFunction
-{
+public class BlobStoreFunction {
 	@FunctionName("blobtest")
-	public void setLastBlobInfo(@BlobTrigger(name = "blobtest", 
-									dataType = "binary", 
-									path = "images/{name}", 
-									connection = "BlobStoreConnection") 
-								byte[] content,
-								@BindingName("name") String blobname, 
-								final ExecutionContext context) {
+	public void setLastBlobInfo(
+			@BlobTrigger(name = "blobtest", dataType = "binary", path = "images/{name}", connection = "BlobStoreConnection") byte[] content,
+			@BindingName("name") String blobname,
+			final ExecutionContext context) {
 		try (Jedis jedis = RedisCache.getCachePool().getResource()) {
 			jedis.incr("cnt:blob");
 			jedis.set("serverless::blob::name",
