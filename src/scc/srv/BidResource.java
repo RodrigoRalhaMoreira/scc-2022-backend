@@ -2,6 +2,8 @@ package scc.srv;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import redis.clients.jedis.Jedis;
+import scc.cache.RedisCache;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Resource for managing bids.
@@ -25,8 +28,9 @@ public class BidResource {
     private static final String LOWER_BIDVALUE = "Current bid value has to be higher than "
                                                                     + "current winning bid value for that auction";
     
-    
     private static CosmosDBLayer db_instance;
+    private static Jedis jedis_instance;  
+    private ObjectMapper mapper;
     
     private AuctionsResource auctions;
     
@@ -35,6 +39,8 @@ public class BidResource {
 
     public BidResource() {
         db_instance = CosmosDBLayer.getInstance();
+        jedis_instance = RedisCache.getCachePool().getResource();
+        mapper = new ObjectMapper();
         
         for(Object resource : MainApplication.getSingletonsSet()) 
             if(resource instanceof AuctionsResource)
@@ -51,28 +57,34 @@ public class BidResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String create(Bid bid) throws IllegalArgumentException, IllegalAccessException {
         
-        /**
-         * TODO
-         * REALLY IMPORTANT -->>>   ACTUAL BID HAS TO BE GREATER THAT THE WINNING BID AT THE MOMENT
-         * IF WINNING BID IS CURRENTLY NULL (-> WINNING BID = BID.GETVALUE())
-         */
-        
         String result = checkBid(bid);
-        Bid auctionWinningBid = auctions.getAuctionWinningBid(bid.getAuctionId());
         
         if(result != null)
             return result;
+        
+        Bid auctionWinningBid = auctions.getAuctionWinningBid(bid.getAuctionId());
         
         // bid value has to be higher than current winning bid for that auction
         if(auctionWinningBid != null && auctionWinningBid.getValue() >= bid.getValue())
             return LOWER_BIDVALUE;
         
-        // TIAGO ---> AZURE FUNCTION
+        Auction auction = auctions.getAuctionById(bid.getAuctionId());
+        AuctionDAO dbAuction = new AuctionDAO(auction);
+        
+        try {
+            // No need to read from the cache, only write it
+            dbAuction.setWinnigBid(bid);
+            jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
+            db_instance.updateAuction(dbAuction);
+            
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
+        db_instance.updateAuction(dbAuction);
         
         // Create the bid to store in the database
         BidDAO dbbid = new BidDAO(bid);
-        // AZURE FUNCTION
-        
         db_instance.putBid(dbbid);
         return dbbid.getId();
     }

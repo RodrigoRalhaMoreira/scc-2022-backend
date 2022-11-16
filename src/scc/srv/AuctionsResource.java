@@ -117,7 +117,7 @@ public class AuctionsResource {
         AuctionDAO dbAuction = new AuctionDAO(auction);
         
         try {
-            String res = jedis_instance.get("auction:"+ auction.getId());
+            String res = jedis_instance.get("auction:" + auction.getId());
             if (res != auction.getId() && res != null) {
                 jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
                 db_instance.updateAuction(dbAuction);
@@ -170,6 +170,13 @@ public class AuctionsResource {
         Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
         if (it.hasNext())
             return ((((AuctionDAO) it.next()).toAuction().getStatus()));
+        return null;
+    }
+    
+    public Auction getAuctionById(String id) {
+        Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
+        if (it.hasNext())
+            return ((((AuctionDAO) it.next()).toAuction()));
         return null;
     }
     
