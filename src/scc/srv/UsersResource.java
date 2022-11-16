@@ -28,7 +28,7 @@ public class UsersResource {
     private static final String DELETE_ERROR = "Error deleting non-existent user";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
-    private static final String ALREADY_AUTH = "User already authenticated";  
+    private static final String ALREADY_AUTH = "User already authenticated";
     private static final String USER_NOT_AUTH = "User not authenticated";
 
     private static CosmosDBLayer db_instance;
