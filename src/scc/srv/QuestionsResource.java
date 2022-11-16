@@ -14,6 +14,7 @@ public class QuestionsResource {
     private static final String AUCTION_ERROR = "Auction does not exist";
     private static final String USER_NOT_EXISTS = "Error non-existent user";
     private static final String AUCTION_NOT_EXISTS = "Error non-existent auction";
+    private static final String USER_NOT_AUTH = "User not authenticated";
 
     private static CosmosDBLayer db_instance;
 
@@ -31,8 +32,12 @@ public class QuestionsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(Question question) {
+
         if (question == null)
             return QUESTION_NULL;
+
+        if (!UsersResource.checkAuth(question.getUserId()))
+            return USER_NOT_AUTH;
 
         if (!userExistsInDB(question.getUserId()))
             return USER_NOT_EXISTS;
@@ -60,6 +65,9 @@ public class QuestionsResource {
             @PathParam("id") String id) {
         if (question == null)
             return QUESTION_NULL;
+        
+        if (!UsersResource.checkAuth(question.getUserId()))
+            return USER_NOT_AUTH;
 
         if (!question.getUserId().equals(getAuctionOwner(question.getAuctionId())))
             return ONLY_OWNER_ERROR;

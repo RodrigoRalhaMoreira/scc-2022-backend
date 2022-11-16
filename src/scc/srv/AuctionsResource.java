@@ -35,6 +35,7 @@ public class AuctionsResource {
     private static final String NULL_ENDTIME = "Null endTime exception";
     private static final String NULL_STATUS = "Null status exception";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
+    private static final String USER_NOT_AUTH = "User not authenticated";
     
 
     public AuctionsResource() {
@@ -58,6 +59,9 @@ public class AuctionsResource {
         // Winning bids start by default with the value of null
         
         String result = checkAuction(auction);
+
+        if (!UsersResource.checkAuth(auction.getOwnerId()))
+            return USER_NOT_AUTH;
         
         if(result != null)
             return result;
@@ -90,6 +94,9 @@ public class AuctionsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String update(Auction auction) {
+
+        if (!UsersResource.checkAuth(auction.getOwnerId()))
+                    return USER_NOT_AUTH;
         
         String result = checkAuction(auction);
         

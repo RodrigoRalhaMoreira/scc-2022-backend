@@ -23,6 +23,7 @@ public class BidResource {
     private static final String NULL_AUCTIONID = "Null auctionId exception";
     private static final String NULL_USERID = "Null userId exception";
     private static final String NEGATIVE_VALUE = "value can not be negative or zero";
+    private static final String USER_NOT_AUTH = "User not authenticated";
 
     private static CosmosDBLayer db_instance;
 
@@ -53,6 +54,8 @@ public class BidResource {
             return result;
         
         else {
+            if (!UsersResource.checkAuth(bid.getUserId()))
+                return USER_NOT_AUTH;
             // Create the bid to store in the database
             BidDAO dbbid = new BidDAO(bid);
     

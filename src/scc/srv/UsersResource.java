@@ -5,12 +5,16 @@ import scc.cache.RedisCache;
 import jakarta.ws.rs.*;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -24,8 +28,8 @@ public class UsersResource {
     private static final String DELETE_ERROR = "Error deleting non-existent user";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
-    private static final String IMG_NOT_EXIST = "Image does not exist";
-    private static final String ALREADY_AUTH = "User already authenticated";
+    private static final String ALREADY_AUTH = "User already authenticated";  
+    private static final String USER_NOT_AUTH = "User not authenticated";
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
@@ -78,10 +82,14 @@ public class UsersResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String update(User user) {
+
         if (user == null) {
             return USER_NULL;
         }
-        
+
+        if(!checkAuth(user.getId()))
+            return USER_NOT_AUTH;
+
         //verify if imgId exists
         if (!media.verifyImgId(user.getPhotoId())) {
             System.out.println(IMG_NOT_EXIST);
@@ -114,6 +122,10 @@ public class UsersResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public String delete(@PathParam("id") String id) {
+
+        if(!checkAuth(id))
+            return USER_NOT_AUTH;
+
         int removed = 0;
         if (userExistsInDB(id)) {
             db_instance.delUserById(id);
@@ -127,6 +139,10 @@ public class UsersResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getAuctionsOfUser(@PathParam("id") String id) {
+
+        if(!checkAuth(id))
+            throw new NotAuthorizedException(USER_NOT_AUTH);
+
         List<String> auctions = new ArrayList<>();
         Iterator<AuctionDAO> it = db_instance.getAuctionsByUserId(id).iterator();
         while(it.hasNext()) {
@@ -144,26 +160,65 @@ public class UsersResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String login(Login login) {
+    public Response auth(Login login) {
 
-        
         UserDAO user = null;
+
         if (!userExistsInDB(login.getId())) {
-            return INVALID_LOGIN;
+            throw new NotAuthorizedException(INVALID_LOGIN);
         } else {
             user = db_instance.getUserById(login.getId()).iterator().next();
-
-            if (!user.getPwd().equals(login.getPwd()))
-                return INVALID_LOGIN;
             
             if (db_instance.getLoginById(login.getId()).iterator().hasNext())
-                return ALREADY_AUTH;
-            
+                throw new NotAuthorizedException(ALREADY_AUTH);
+
+            String uid = UUID.randomUUID().toString();
+
+                NewCookie cookie = new NewCookie.Builder("scc:session")
+                                        .value(uid)
+                                        .path("/")
+                                        .comment("sessionid")
+                                        .maxAge(3600)
+                                        .secure(false)
+                                        .httpOnly(true)
+                                        .build();
+                
+            try {
+                jedis_instance.set("session:"+ user.getId(), mapper.writeValueAsString(new Session(uid, user.getId())));
+            } catch (JsonProcessingException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            /*     
             LoginDAO loginDAO = new LoginDAO(login);
 
-            db_instance.putLogin(loginDAO);
-            return loginDAO.getId();
+            db_instance.putLogin(loginDAO);*/   
+
+            return Response.ok().cookie(cookie).build();
         }
+    }
+
+    @Path("/{id}/following")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> following(@PathParam("id") String id) {
+
+        if(!checkAuth(id))
+            throw new NotAuthorizedException(USER_NOT_AUTH);
+
+        List<String> auctions = new ArrayList<>(); 
+        
+        Iterator<AuctionDAO> it = db_instance.getAuctionUserFollow(id).iterator();
+        while(it.hasNext())
+            auctions.add(it.next().toAuction().toString());
+        
+        return auctions;
+    }
+
+    public static boolean checkAuth(String userId) {
+        String res = jedis_instance.get("session:" + userId);
+        return res != null;
     }
 
     private boolean userExistsInDB(String userId) {
