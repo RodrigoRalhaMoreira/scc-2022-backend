@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.lang.reflect.Field;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * Resource for managing auction.
@@ -48,11 +50,13 @@ public class AuctionsResource {
      * 
      * @throws IllegalAccessException
      * @throws IllegalArgumentException
+     * @throws JsonProcessingException
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Auction auction) throws IllegalArgumentException, IllegalAccessException {
+    public String create(Auction auction)
+            throws IllegalArgumentException, IllegalAccessException, JsonProcessingException {
 
         // Winning bids start by default with the value of null
 
@@ -67,10 +71,7 @@ public class AuctionsResource {
         // Create the user to store in the database and cache
         AuctionDAO dbAuction = new AuctionDAO(auction);
 
-        try {
-            jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
-        } catch (Exception e) {
-        }
+        jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(auction));
 
         db_instance.putAuction(dbAuction);
         return dbAuction.getTitle();
@@ -105,7 +106,7 @@ public class AuctionsResource {
 
         try {
             String res = jedis_instance.get("auction:" + auction.getId());
-            if (res != auction.getId() && res != null) {
+            if (res != null) {
                 jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
                 db_instance.updateAuction(dbAuction);
                 return dbAuction.getId();
