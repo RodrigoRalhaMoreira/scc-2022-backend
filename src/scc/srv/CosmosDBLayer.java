@@ -1,6 +1,6 @@
 package scc.srv;
 
-import java.util.Set;
+import java.util.Iterator;
 
 import com.azure.cosmos.ConsistencyLevel;
 import com.azure.cosmos.CosmosClient;
@@ -157,4 +157,16 @@ public class CosmosDBLayer {
 				LoginDAO.class);
     }
 
+	public CosmosPagedIterable<AuctionDAO> getCloseAuctions() {
+		init();
+        CosmosPagedIterable<AuctionDAO> cpi = auctions.queryItems("SELECT * FROM auctions WHERE auction.status=\""+ AuctionStatus.OPEN.getStatus() + "\"" + "AND auctions.endTime <= GetCurrentDateTime()",
+				new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
+		Iterator<AuctionDAO> it = cpi.iterator();
+		while(it.hasNext()) {
+			AuctionDAO auction = it.next();
+			auction.setStatus(AuctionStatus.CLOSE.getStatus());
+		}
+		return cpi;
+	}
 }
