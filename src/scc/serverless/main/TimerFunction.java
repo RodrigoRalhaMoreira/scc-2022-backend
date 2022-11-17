@@ -1,8 +1,11 @@
 package scc.serverless.main;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import com.microsoft.azure.functions.annotation.*;
+
 import redis.clients.jedis.Jedis;
+import scc.cache.RedisCache;
 import scc.srv.AuctionDAO;
 import scc.srv.CosmosDBLayer;
 
@@ -18,16 +21,24 @@ public class TimerFunction {
 	private static Jedis jedis_instance;
 	private ObjectMapper mapper;
 
-	@FunctionName("close-auction")
-	public void cosmosFunction(@TimerTrigger(name = "close-auction", schedule = "30 */1 * * * *") String timerInfo,
+	public TimerFunction() {
+		db_instance = CosmosDBLayer.getInstance();
+		jedis_instance = RedisCache.getCachePool().getResource();
+		mapper = new ObjectMapper();
+	}
+
+	@FunctionName("closeAuction")
+	public void cosmosFunction(@TimerTrigger(name = "closeAuctionTrigger", schedule = "*/1 * * * * *") String timerInfo,
 			ExecutionContext context) {
-		/*
-		 * try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-		 * jedis.incr("cnt:timer");
-		 * jedis.set("serverless-time", new
-		 * SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(new Date()));
-		 * }
-		 */
+
+		context.getLogger().info("Timer is triggered CLOSE AUCTION: " + timerInfo);
+		try {
+			jedis_instance.incr("cnt:timer");
+			jedis_instance.set("serverless-time",
+					new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(new Date()));
+		} catch (Exception e) {
+			context.getLogger().info(e.getMessage());
+		}
 
 		Iterator<AuctionDAO> it = db_instance.getCloseAuctions().iterator();
 
@@ -38,6 +49,22 @@ public class TimerFunction {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	@FunctionName("keepAlive")
+	public void keepAlive(
+			@TimerTrigger(name = "keepAliveTrigger", schedule = "*/1 * * * * *") String timerInfo,
+			ExecutionContext context) {
+
+		context.getLogger().info("Timer is triggered KEEP ALIVE: " + timerInfo);
+
+		try {
+			jedis_instance.incr("cnt:timer");
+			jedis_instance.set("serverless-time",
+					new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(new Date()));
+		} catch (Exception e) {
+			context.getLogger().info(e.getMessage());
 		}
 	}
 }
