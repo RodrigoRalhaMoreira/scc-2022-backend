@@ -4,7 +4,9 @@ import scc.cache.RedisCache;
 import scc.srv.MainApplication;
 import scc.srv.cosmosdb.CosmosDBLayer;
 import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.srv.cosmosdb.models.BidDAO;
 import scc.srv.cosmosdb.models.LoginDAO;
+import scc.srv.cosmosdb.models.QuestionDAO;
 import scc.srv.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.Login;
 import scc.srv.dataclasses.User;
@@ -34,6 +36,7 @@ public class UsersResource {
     private static final String INVALID_LOGIN = "UserId or password incorrect";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
     private static final String ALREADY_AUTH = "User already authenticated";
+    private static final String USER_NOT_AUTH = "User not authenticated";
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
@@ -176,6 +179,66 @@ public class UsersResource {
             return loginDAO.getId();
        }
     }
+    
+    @Path("/{id}/auctions?status=\"OPEN\"")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> openAuctionsUserList(@PathParam("id") String id) {
+
+        if(!checkAuth(id))
+            throw new NotAuthorizedException(USER_NOT_AUTH);
+
+        List<String> openAuctions = new ArrayList<>(); 
+        
+        Iterator<AuctionDAO> it = db_instance.getOpenAuctions(id).iterator();
+        while(it.hasNext())
+            openAuctions.add(it.next().toAuction().toString());
+        
+        return openAuctions;
+    }
+
+    /**
+     * We considered as following auctions those which the user did a bid on an auction or
+     * asked a question
+     * 
+     * @param id - id of the user
+     * @return
+     */
+    @Path("/{id}/following")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> following(@PathParam("id") String id) {
+
+        if(!checkAuth(id))
+            throw new NotAuthorizedException(USER_NOT_AUTH);
+
+        List<String> winningBidAuctions = new ArrayList<>(); 
+        List<String> bidAuctions = new ArrayList<>(); 
+        List<String> questionsAuctions = new ArrayList<>(); 
+         // null
+        
+        Iterator<AuctionDAO> itwb = db_instance.getAuctionUserFollow(id).iterator(); // getAuctionUserFollow(id)
+        while(itwb.hasNext())
+            winningBidAuctions.add("  Winning Bidded Auction Id: " + itwb.next().getWinnigBid().getAuctionId()); // .toBid().toString());
+        
+        Iterator<BidDAO> itb = db_instance.getBidsByUserId(id).iterator(); // getAuctionUserFollow(id)
+        while(itb.hasNext())
+            bidAuctions.add("  Bidded Auction Id: " + itb.next().getAuctionId()); // .toBid().toString());
+        
+        Iterator<QuestionDAO> itq = db_instance.getQuestionsByUserId(id).iterator(); // getAuctionUserFollow(id)
+        while(itq.hasNext())
+            questionsAuctions.add("  Questioned Auction Id: " + itq.next().getAuctionId()); //itq.next().getAuctionId()); // .toQuestion().toString());
+        
+        List<String> newList = new ArrayList<>();
+        
+        newList.addAll(winningBidAuctions);
+        newList.addAll(bidAuctions);
+        newList.addAll(questionsAuctions);
+        
+        return newList;
+    }
 
     private boolean userExistsInDB(String userId) {
         CosmosPagedIterable<UserDAO> usersIt = db_instance.getUserById(userId);
@@ -199,6 +262,11 @@ public class UsersResource {
             return IMG_NOT_EXIST;
         
         return null;
+    }
+    
+    public static boolean checkAuth(String userId) {
+        String res = jedis_instance.get("session:" + userId);
+        return res != null;
     }
     
     private String checkLoginUser(Login login) throws IllegalArgumentException, IllegalAccessException{

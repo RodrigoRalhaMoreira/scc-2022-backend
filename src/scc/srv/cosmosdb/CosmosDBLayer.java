@@ -18,6 +18,7 @@ import scc.srv.cosmosdb.models.BidDAO;
 import scc.srv.cosmosdb.models.LoginDAO;
 import scc.srv.cosmosdb.models.QuestionDAO;
 import scc.srv.cosmosdb.models.UserDAO;
+import scc.srv.dataclasses.AuctionStatus;
 
 public class CosmosDBLayer {
     private static final String CONNECTION_URL = "https://scc23groupdrt.documents.azure.com:443/";
@@ -161,6 +162,34 @@ public class CosmosDBLayer {
         return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
                 new CosmosQueryRequestOptions(),
                 LoginDAO.class);
+    }
+    
+    public CosmosPagedIterable<AuctionDAO> getOpenAuctions(String id) {
+        init();
+        return auctions.queryItems("SELECT * FROM auctions WHERE auctions.ownerId=\"" + id + "\"" + "AND auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\"",
+            new CosmosQueryRequestOptions(),
+                AuctionDAO.class);
+    }
+    
+    public CosmosPagedIterable<QuestionDAO> getQuestionsByUserId(String id) {
+        init();
+        return questions.queryItems("SELECT * FROM questions WHERE questions.userId=\"" + id + "\"",
+            new CosmosQueryRequestOptions(),
+                QuestionDAO.class);
+    }
+    
+    public CosmosPagedIterable<BidDAO> getBidsByUserId(String id) {
+        init();
+        return bids.queryItems("SELECT * FROM bids WHERE bids.userId=\"" + id + "\"",
+            new CosmosQueryRequestOptions(),
+                BidDAO.class);
+    }
+
+    public CosmosPagedIterable<AuctionDAO> getAuctionUserFollow(String id) {
+        init();
+        return auctions.queryItems("SELECT * FROM auctions WHERE auctions.winningBid.userId=\"" + id + "\"",
+            new CosmosQueryRequestOptions(),
+                AuctionDAO.class);
     }
 
 }

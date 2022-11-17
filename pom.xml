@@ -155,7 +155,7 @@
           <pricingTier>F1</pricingTier>  
           <region>westeurope</region>  
           <runtime> 
-            <os>windows</os>  
+            <os>linux</os>  
             <javaVersion>Java 17</javaVersion>  
             <webContainer>Tomcat 10.0</webContainer> 
           </runtime>  
