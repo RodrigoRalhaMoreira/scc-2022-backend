@@ -24,14 +24,11 @@ public class MediaResource {
     private static final String FILE_UPLOADED = "File updloaded: ";
     
     // Get connection string in the storage access keys page
-    private static final String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;"
-            + "AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;"
-            + "EndpointSuffix=core.windows.net";
+    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;EndpointSuffix=core.windows.net";
 
     // Get container client
     private BlobContainerClient containerClient = new BlobContainerClientBuilder().connectionString(storageConnectionString)
                                                       .containerName("images").buildClient();
-    
     
     /**
      * Post a new image.The id of the image is its hash.
@@ -46,9 +43,9 @@ public class MediaResource {
             return NULL_IMAGE;
         
         String filename = Hash.of(contents);
-        
+
         try {
-            
+
             BinaryData data = BinaryData.fromBytes(contents); // BinaryData.fromFile(java.nio.file.Path.of(filename));
 
             // Get client to blob
@@ -80,15 +77,15 @@ public class MediaResource {
 
             // Download contents to BinaryData (check documentation for other alternatives)
             BinaryData data = blob.downloadContent();
-            
-            System.out.println( "Blob size : " + data.toBytes().length);
-            
+
+            System.out.println("Blob size : " + data.toBytes().length);
+
             return data.toBytes();
-            
-        } catch( Exception e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         return null;
     }
 
@@ -99,37 +96,36 @@ public class MediaResource {
     @Path("/list")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> list() {
-        
+
         List<String> list = new ArrayList<>();
-        
+
         try {
 
             // Get client to blob
             PagedIterable<BlobItem> blob = containerClient.listBlobs();
 
-            for(BlobItem item : blob)
+            for (BlobItem item : blob)
                 list.add(item.getName());
-            
+
             return list;
-            
-        } catch( Exception e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         return null;
-    } 
-    
+    }
+
     public boolean verifyImgId(String ImgId) {
-        
+
         List<String> list = new ArrayList<>();
-       
+
         // Get client to blob
         PagedIterable<BlobItem> blob = containerClient.listBlobs();
 
-        for(BlobItem item : blob)
+        for (BlobItem item : blob)
             list.add(item.getName());
-        
+
         return list.contains(ImgId);
     }
 }
-
