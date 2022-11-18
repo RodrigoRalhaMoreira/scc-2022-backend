@@ -1,9 +1,15 @@
 package scc.srv;
 
+import scc.cache.RedisCache;
+
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Cookie;
+import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * Resource for managing questions.
@@ -17,6 +23,8 @@ public class QuestionsResource {
     private static final String AUCTION_NOT_EXISTS = "Error non-existent auction";
 
     private static CosmosDBLayer db_instance;
+    private static Jedis jedis_instance;
+    private ObjectMapper mapper;
     private UsersResource users;
 
     // Improvements to be made. If we have "id" of auction as PathParam we should
@@ -24,6 +32,8 @@ public class QuestionsResource {
 
     public QuestionsResource() {
         db_instance = CosmosDBLayer.getInstance();
+        jedis_instance = RedisCache.getCachePool().getResource();
+        mapper = new ObjectMapper();
         for(Object resource : MainApplication.getSingletonsSet())  {
             if(resource instanceof UsersResource)
                 users = (UsersResource) resource;
@@ -32,11 +42,13 @@ public class QuestionsResource {
 
     /**
      * Creates a new question.
+     * 
+     * @throws JsonProcessingException
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Question question) {
+    public String create(@CookieParam("scc:session") Cookie session, Question question) throws JsonProcessingException {
 
         if (question == null)
             return QUESTION_NULL;
@@ -57,6 +69,7 @@ public class QuestionsResource {
 
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
+        jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
 
         db_instance.putQuestion(dbquestion);
         return dbquestion.getId();
@@ -65,13 +78,16 @@ public class QuestionsResource {
     // Later improve this to get auctionId of the path
     /**
      * Reply to a question.
+     * 
+     * @throws JsonProcessingException
+     * @throws JsonMappingException
      */
     @Path("/{id}/reply")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String reply(@QueryParam("scc:session") Cookie session, Question question,
-            @PathParam("id") String id) {
+    public String reply(@CookieParam("scc:session") Cookie session, Question question,
+            @PathParam("id") String id) throws JsonMappingException, JsonProcessingException {
         if (question == null)
             return QUESTION_NULL;
         
@@ -86,11 +102,18 @@ public class QuestionsResource {
             return ONLY_OWNER_ERROR;
 
         QuestionDAO dbReply = new QuestionDAO(question);
+        jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
         db_instance.putQuestion(dbReply);
         return dbReply.getId();
     }
 
-    private String getAuctionOwner(String auctionId) {
+    private String getAuctionOwner(String auctionId) throws JsonMappingException, JsonProcessingException {
+        String auction_res = jedis_instance.get("auction:" + auctionId);
+        if (auction_res != null) {
+            Auction auction = mapper.readValue(auction_res, Auction.class);
+            return auction.getOwnerId();
+        }
+
         CosmosPagedIterable<AuctionDAO> auctionsIt = db_instance.getAuctionById(auctionId);
         if (!auctionsIt.iterator().hasNext())
             return AUCTION_ERROR; // this should never happen.

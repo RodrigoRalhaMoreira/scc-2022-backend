@@ -1,6 +1,6 @@
 package scc.srv;
 
-import java.util.Set;
+import java.util.Iterator;
 
 import com.azure.cosmos.ConsistencyLevel;
 import com.azure.cosmos.CosmosClient;
@@ -102,7 +102,8 @@ public class CosmosDBLayer {
 
 	public CosmosPagedIterable<AuctionDAO> getAuctionsByUserId(String id) {
 		init();
-		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.ownerId=\"" + id + "\"", new CosmosQueryRequestOptions(), AuctionDAO.class);
+		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.ownerId=\"" + id + "\"",
+				new CosmosQueryRequestOptions(), AuctionDAO.class);
 	}
 
 	public void close() {
@@ -145,14 +146,14 @@ public class CosmosDBLayer {
 		return auctions.upsertItem(dbAuction);
 	}
 
-    public CosmosItemResponse<LoginDAO> putLogin(LoginDAO loginDAO) {
+	public CosmosItemResponse<LoginDAO> putLogin(LoginDAO loginDAO) {
 		init();
 		return login.createItem(loginDAO);
-    }
+	}
 
-    public CosmosPagedIterable<LoginDAO> getLoginById(String id) {
+	public CosmosPagedIterable<LoginDAO> getLoginById(String id) {
 		init();
-        return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
+		return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
 				new CosmosQueryRequestOptions(),
 				LoginDAO.class);
     }
@@ -162,8 +163,21 @@ public class CosmosDBLayer {
         return auctions.queryItems("SELECT * FROM auctions WHERE auctions.winningBid.userId=\"" + id + "\"",
 			new CosmosQueryRequestOptions(),
 				AuctionDAO.class);
-
-		
     }
 
+	public CosmosPagedIterable<AuctionDAO> getCloseAuctions() {
+		init();
+		CosmosPagedIterable<AuctionDAO> cpi = auctions.queryItems(
+				"SELECT * FROM auctions WHERE auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\""
+						+ "AND auctions.endTime <= GetCurrentTimestamp()",
+				new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
+		Iterator<AuctionDAO> it = cpi.iterator();
+		while (it.hasNext()) {
+			AuctionDAO auction = it.next();
+			auction.setStatus(AuctionStatus.CLOSE.getStatus());
+			auctions.upsertItem(auction);
+		}
+		return cpi;
+	}
 }
