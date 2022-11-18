@@ -202,10 +202,6 @@ public class UsersResource {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            /*     
-            LoginDAO loginDAO = new LoginDAO(login);
-
-            db_instance.putLogin(loginDAO);*/   
 
             return Response.ok().cookie(cookie).build();
     }
@@ -249,15 +245,11 @@ public class UsersResource {
             s = mapper.readValue(jedis_instance.get("session:" + session.getValue()), Session.class);
         } catch (JsonMappingException e) {
             // TODO Auto-generated catch block
-            System.out.println("\n\n\n Mapping message:" + e.getMessage()); 
+            e.printStackTrace();
         } catch (JsonProcessingException e) {
             // TODO Auto-generated catch block
-            System.out.println("\n\n\n Processing message:" + e.getMessage()); 
+            e.printStackTrace();
         }
-
-        System.out.println("\n\n\nSESSION redis: "+ jedis_instance.get("session:" + session.getValue()));
-
-        System.out.println("\n\n\nSESSION OBJECT: "+ s);
 
         if (s == null || s.getUserId() == null || s.getUserId().length() == 0)
             throw new Exception("No valid session initialized");
