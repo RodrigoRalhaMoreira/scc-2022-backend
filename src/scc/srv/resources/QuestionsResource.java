@@ -169,7 +169,7 @@ public class QuestionsResource {
         
         QuestionDAO dbReply = new QuestionDAO(question);
         db_instance.putQuestion(dbReply);
-        return "DBQUESTION --> " + dbQuestion + "    ,,, DBREPLY --> " + dbReply;
+        return dbReply.getMessage();
     }
 
     private String getAuctionOwner(String auctionId) {
