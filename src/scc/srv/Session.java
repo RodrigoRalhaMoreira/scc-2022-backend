@@ -9,6 +9,10 @@ public class Session {
     @JsonProperty("userId")
     private String userId;
 
+    public Session() {
+        super();
+    }
+
     public Session(String uuid, String userId) {
         this.uuid = uuid;
         this.userId = userId;
