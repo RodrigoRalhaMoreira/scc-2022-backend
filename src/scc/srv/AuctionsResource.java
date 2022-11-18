@@ -94,9 +94,6 @@ public class AuctionsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String update(Auction auction) {
-
-        if (!UsersResource.checkAuth(auction.getOwnerId()))
-                    return USER_NOT_AUTH;
         
         String result = checkAuction(auction);
         
