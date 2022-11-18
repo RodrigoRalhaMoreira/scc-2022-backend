@@ -156,7 +156,14 @@ public class CosmosDBLayer {
 		return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
 				new CosmosQueryRequestOptions(),
 				LoginDAO.class);
-	}
+    }
+
+	public CosmosPagedIterable<AuctionDAO> getAuctionUserFollow(String id) {
+		init();
+        return auctions.queryItems("SELECT * FROM auctions WHERE auctions.winningBid.userId=\"" + id + "\"",
+			new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
+    }
 
 	public CosmosPagedIterable<AuctionDAO> getCloseAuctions() {
 		init();

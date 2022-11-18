@@ -3,6 +3,7 @@ package scc.srv;
 import scc.cache.RedisCache;
 
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import redis.clients.jedis.Jedis;
 
@@ -31,6 +32,7 @@ public class BidResource {
     private static final String NEGATIVE_VALUE = "value can not be negative or zero";
 
     private static CosmosDBLayer db_instance;
+    private UsersResource users;
     private static Jedis jedis_instance;
     private ObjectMapper mapper;
 
@@ -41,6 +43,10 @@ public class BidResource {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
+        for(Object resource : MainApplication.getSingletonsSet())  {
+            if(resource instanceof UsersResource)
+                users = (UsersResource) resource;
+        }
     }
 
     /**
@@ -51,8 +57,8 @@ public class BidResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Bid bid) throws JsonProcessingException {
-
+    public String create(@CookieParam("scc:session") Cookie session, Bid bid) throws JsonProcessingException {
+        
         /**
          * TODO
          * REALLY IMPORTANT -->>> ACTUAL BID HAS TO BE GREATER THAT THE WINNING BID AT
@@ -60,10 +66,17 @@ public class BidResource {
          * IF WINNING BID IS CURRENTLY NULL (-> WINNING BID = BID.GETVALUE())
          */
 
-        String error = checkBid(bid);
-
-        if (error != null)
-            return error;
+         try {
+            users.checkCookieUser(session, bid.getUserId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
+        
+        String result = checkBid(bid);
+        
+        if(result != null)
+            return result;
 
         jedis_instance.set("bid:" + bid.getId(), mapper.writeValueAsString(bid));
 

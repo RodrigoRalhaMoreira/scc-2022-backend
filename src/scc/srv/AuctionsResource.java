@@ -9,6 +9,7 @@ import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.core.Cookie;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
@@ -22,6 +23,7 @@ public class AuctionsResource {
     private ObjectMapper mapper;
 
     private MediaResource media;
+    private UsersResource users;
 
     private static final String AUCTION_NULL = "Null auction exception";
     private static final String AUCTION_NOT_EXIST = "Auction does not exist";
@@ -37,13 +39,16 @@ public class AuctionsResource {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
-
-        for (Object resource : MainApplication.getSingletonsSet())
-            if (resource instanceof MediaResource) {
+        
+        for(Object resource : MainApplication.getSingletonsSet())  {
+            if(resource instanceof MediaResource)
                 media = (MediaResource) resource;
-                break;
-            }
-    }
+            if(resource instanceof UsersResource)
+                users = (UsersResource) resource;
+        }
+            
+            
+    } 
 
     /**
      * Creates a new auction. The id of the auction is its hash.
@@ -55,27 +60,40 @@ public class AuctionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Auction auction)
-            throws IllegalArgumentException, IllegalAccessException, JsonProcessingException {
-
+    public String create(@CookieParam("scc:session") Cookie session, Auction auction) throws IllegalArgumentException, IllegalAccessException {
+        
         // Winning bids start by default with the value of null
+        
+        String result = checkAuction(auction);
 
-        String error = checkAuction(auction);
-        if (error != null)
-            return error;
-
-        // Status special verification when creating an auction
-        if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
-            error = INVALID_STATUS;
-
-        // Create the user to store in the database and cache
-        AuctionDAO dbAuction = new AuctionDAO(auction);
-
-        jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(auction));
-
-        db_instance.putAuction(dbAuction);
-        return dbAuction.getTitle();
-
+        try {
+            users.checkCookieUser(session, auction.getOwnerId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
+        
+        if(result != null)
+            return result;
+        
+        else {
+            
+            // Status special verification when creating an auction
+            if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) 
+                result = INVALID_STATUS; 
+            
+            // Create the user to store in the database and cache
+            AuctionDAO dbAuction = new AuctionDAO(auction);
+    
+            try {
+                jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
+            } catch (Exception e) {
+                // TODO: handle exception
+            }
+    
+            db_instance.putAuction(dbAuction);
+            return dbAuction.getTitle();
+        }
     }
 
     /**
@@ -88,31 +106,42 @@ public class AuctionsResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String update(Auction auction) throws IllegalArgumentException, IllegalAccessException {
+    public String update(@CookieParam("scc:session") Cookie session, Auction auction) throws IllegalArgumentException, IllegalAccessException {
 
-        String error = checkAuction(auction);
-        if (error != null)
-            return error;
+        try {
+            users.checkCookieUser(session, auction.getOwnerId());
+        } catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        
+        String result = checkAuction(auction);
+        
+        if(result != null)
+            return result;
+    
 
         // Status special verification when updating an auction
-        if (!isValidStatus(auction.getStatus()))
+        if(!isValidStatus(auction.getStatus()))
             return INVALID_STATUS;
-
-        // Checks if auctionId exists
-        if (!db_instance.getAuctionById(auction.getId()).iterator().hasNext())
-            return AUCTION_NOT_EXIST;
 
         AuctionDAO dbAuction = new AuctionDAO(auction);
 
         try {
-            String res = jedis_instance.get("auction:" + auction.getId());
-            if (res != null) {
+            String res = jedis_instance.get("auction:"+ auction.getId());
+            if (res != auction.getId() && res != null) {
                 jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(dbAuction));
                 db_instance.updateAuction(dbAuction);
                 return dbAuction.getId();
             }
         } catch (Exception e) {
+            // TODO: handle exception
         }
+
+        if (!db_instance.getAuctionById(auction.getId()).iterator().hasNext()) {
+            System.out.println(AUCTION_NOT_EXIST);
+            return AUCTION_NOT_EXIST;
+        } 
 
         db_instance.updateAuction(dbAuction);
         return dbAuction.getId();

@@ -3,6 +3,7 @@ package scc.srv;
 import scc.cache.RedisCache;
 
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Cookie;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
 import com.azure.cosmos.util.CosmosPagedIterable;
@@ -24,6 +25,7 @@ public class QuestionsResource {
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
     private ObjectMapper mapper;
+    private UsersResource users;
 
     // Improvements to be made. If we have "id" of auction as PathParam we should
     // not have to pass it as param in POST request.
@@ -32,6 +34,10 @@ public class QuestionsResource {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
+        for(Object resource : MainApplication.getSingletonsSet())  {
+            if(resource instanceof UsersResource)
+                users = (UsersResource) resource;
+        }
     }
 
     /**
@@ -42,9 +48,17 @@ public class QuestionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Question question) throws JsonProcessingException {
+    public String create(@CookieParam("scc:session") Cookie session, Question question) throws JsonProcessingException {
+
         if (question == null)
             return QUESTION_NULL;
+
+        try {
+            users.checkCookieUser(session, question.getUserId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
 
         if (!userExistsInDB(question.getUserId()))
             return USER_NOT_EXISTS;
@@ -72,10 +86,17 @@ public class QuestionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String reply(Question question,
+    public String reply(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String id) throws JsonMappingException, JsonProcessingException {
         if (question == null)
             return QUESTION_NULL;
+        
+        try {
+            users.checkCookieUser(null, question.getUserId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
 
         if (!question.getUserId().equals(getAuctionOwner(question.getAuctionId())))
             return ONLY_OWNER_ERROR;
