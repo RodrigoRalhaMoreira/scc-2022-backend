@@ -12,20 +12,22 @@ public class QuestionDAO {
 	private String auctionId;
 	private String userId;
 	private String message;
+	private String reply;
 
 	public QuestionDAO() {
 	}
 
 	public QuestionDAO(Question q) {
-		this(q.getId(), q.getAuctionId(), q.getUserId(), q.getMessage());
+		this(q.getId(), q.getAuctionId(), q.getUserId(), q.getMessage(), q.getReply());
 	}
 
-	public QuestionDAO(String id, String auctionId, String userId, String message) {
+	public QuestionDAO(String id, String auctionId, String userId, String message, String reply) {
 		super();
 		this.id = id;
 		this.auctionId = auctionId;
 		this.userId = userId;
 		this.message = message;
+		this.reply = reply;
 	}
 
 	public String get_rid() {
@@ -59,14 +61,18 @@ public class QuestionDAO {
 	public String getMessage() {
 		return message;
 	}
+	
+	public String getReply() {
+        return reply;
+    }
 
 	public Question toQuestion() {
-		return new Question(id, auctionId, userId, message);
+		return new Question(id, auctionId, userId, message, reply);
 	}
 
 	@Override
 	public String toString() {
 		return "QuestionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", auctionId=" + auctionId
-				+ ", userId=" + userId + ", message=" + message + "]";
+				+ ", userId=" + userId + ", message=" + message + ", reply=" + reply + "]";
 	}
 }

@@ -5,10 +5,14 @@ import jakarta.ws.rs.core.MediaType;
 import scc.srv.cosmosdb.CosmosDBLayer;
 import scc.srv.cosmosdb.models.AuctionDAO;
 import scc.srv.cosmosdb.models.QuestionDAO;
+import scc.srv.cosmosdb.models.RecentAuctionDAO;
 import scc.srv.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.Question;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import com.azure.cosmos.util.CosmosPagedIterable;
 
@@ -56,7 +60,26 @@ public class QuestionsResource {
         db_instance.putQuestion(dbquestion);
         return dbquestion.getId();
     }
+    
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> listAuctionQuestions(Question question) throws IllegalArgumentException, IllegalAccessException {
+        
+        String error = checkQuestion(question);
+        
+        if(error != null)
+            return null;
+        
+        List<String> list = new ArrayList<>();
 
+        Iterator<QuestionDAO> it = db_instance.getQuestionsByAuctionId(question.getAuctionId()).iterator();
+        if (it.hasNext()) 
+            list.add(((QuestionDAO) it.next()).toQuestion().toString());
+        
+        return list;
+    }
+    
     // Later improve this to get auctionId of the path
     /**
      * Reply to a question.
