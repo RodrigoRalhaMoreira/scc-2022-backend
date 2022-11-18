@@ -2,7 +2,6 @@ package scc.cache;
 
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import scc.srv.Session;
 
 public class RedisCache {
 	private static final String RedisHostname = "rediswesteuropegroupdrt.redis.cache.windows.net";
@@ -25,9 +24,5 @@ public class RedisCache {
 		instance = new JedisPool(poolConfig, RedisHostname, 6380, 1000, RedisKey, true);
 		return instance;
 
-	}
-
-	public Session getSession(String session) {
-		return null;
 	}
 }
