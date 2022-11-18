@@ -13,9 +13,9 @@ public class RedisCache {
         if (instance != null)
             return instance;
         final JedisPoolConfig poolConfig = new JedisPoolConfig();
-        poolConfig.setMaxTotal(128);
-        poolConfig.setMaxIdle(128);
-        poolConfig.setMinIdle(16);
+        poolConfig.setMaxTotal(1000); // 128
+        poolConfig.setMaxIdle(1000); // 128
+        poolConfig.setMinIdle(16); 
         poolConfig.setTestOnBorrow(true);
         poolConfig.setTestOnReturn(true);
         poolConfig.setTestWhileIdle(true);

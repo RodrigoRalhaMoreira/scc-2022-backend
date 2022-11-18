@@ -1,7 +1,11 @@
 package scc.srv.resources;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -13,6 +17,10 @@ import scc.cache.RedisCache;
 import scc.srv.MainApplication;
 import scc.srv.cosmosdb.CosmosDBLayer;
 import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.srv.cosmosdb.models.BidDAO;
+import scc.srv.cosmosdb.models.PopularAuctionDAO;
+import scc.srv.cosmosdb.models.QuestionDAO;
+import scc.srv.cosmosdb.models.RecentAuctionDAO;
 import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.AuctionStatus;
 import scc.srv.dataclasses.Bid;
@@ -146,6 +154,45 @@ public class AuctionsResource {
         return null;
     }
 
+    /**
+     * The most popular auctions are those which have more bids submitted to it
+     * The auctions are ordered by number of bids submitted
+     * @param id
+     * @return
+     */
+    @Path("/any/popular")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> popularAuctionsList() {
+        // AUTH ?
+        
+        List<String> list = new ArrayList<>();
+        
+        Iterator<PopularAuctionDAO> it = db_instance.getPopularAuctions().iterator();
+        if (it.hasNext()) 
+            list.add(((PopularAuctionDAO) it.next()).toPopularAuction().toString());
+        
+        return list;
+    }
+    
+    @Path("/any/recent")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> openAuctionsUserList(@PathParam("id") String id) {
+
+        // AUTH
+        
+        List<String> list = new ArrayList<>();
+        
+        Iterator<RecentAuctionDAO> it = db_instance.getRecentAuctions().iterator();
+        if (it.hasNext()) 
+            list.add(((RecentAuctionDAO) it.next()).toRecentAuction().toString());
+        
+        return list;
+    }
+    
     // -----------------------------------------------------  PRIVATE METHODS ---------------------------------------------
 
 

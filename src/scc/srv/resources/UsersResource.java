@@ -217,7 +217,6 @@ public class UsersResource {
         List<String> winningBidAuctions = new ArrayList<>(); 
         List<String> bidAuctions = new ArrayList<>(); 
         List<String> questionsAuctions = new ArrayList<>(); 
-         // null
         
         Iterator<AuctionDAO> itwb = db_instance.getAuctionUserFollow(id).iterator(); // getAuctionUserFollow(id)
         while(itwb.hasNext())

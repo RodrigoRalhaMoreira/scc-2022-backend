@@ -16,7 +16,9 @@ import com.azure.cosmos.util.CosmosPagedIterable;
 import scc.srv.cosmosdb.models.AuctionDAO;
 import scc.srv.cosmosdb.models.BidDAO;
 import scc.srv.cosmosdb.models.LoginDAO;
+import scc.srv.cosmosdb.models.PopularAuctionDAO;
 import scc.srv.cosmosdb.models.QuestionDAO;
+import scc.srv.cosmosdb.models.RecentAuctionDAO;
 import scc.srv.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.AuctionStatus;
 
@@ -53,6 +55,8 @@ public class CosmosDBLayer {
     private CosmosContainer auctions;
     private CosmosContainer bids;
     private CosmosContainer login;
+    private CosmosContainer popularAuctions;
+    private CosmosContainer recentAuctions;
 
     public CosmosDBLayer(CosmosClient client) {
         this.client = client;
@@ -67,7 +71,8 @@ public class CosmosDBLayer {
         questions = db.getContainer("questions");
         bids = db.getContainer("bids");
         login = db.getContainer("login");
-
+        popularAuctions = db.getContainer("popularAuctions");
+        recentAuctions = db.getContainer("recentAuctions");
     }
 
     public CosmosItemResponse<Object> delUserById(String id) {
@@ -139,6 +144,13 @@ public class CosmosDBLayer {
                 new CosmosQueryRequestOptions(),
                 BidDAO.class);
     }
+    
+    public CosmosPagedIterable<QuestionDAO> getQuestionsByAuctionId(String id) {
+        init();
+        return questions.queryItems("SELECT * FROM questions WHERE questions.auctionId=\"" + id + "\"",
+                new CosmosQueryRequestOptions(),
+                QuestionDAO.class);
+    }
 
     public CosmosPagedIterable<AuctionDAO> getAuctionById(String id) {
         init();
@@ -171,6 +183,13 @@ public class CosmosDBLayer {
                 AuctionDAO.class);
     }
     
+    public CosmosPagedIterable<AuctionDAO> getAllAuctions() {
+        init();
+        return auctions.queryItems("SELECT * FROM auctions",
+            new CosmosQueryRequestOptions(),
+                AuctionDAO.class);
+    }
+    
     public CosmosPagedIterable<QuestionDAO> getQuestionsByUserId(String id) {
         init();
         return questions.queryItems("SELECT * FROM questions WHERE questions.userId=\"" + id + "\"",
@@ -191,5 +210,20 @@ public class CosmosDBLayer {
             new CosmosQueryRequestOptions(),
                 AuctionDAO.class);
     }
-
+    
+    // -------------------  POPULAR AUCTION ------------------------------------
+    
+    public CosmosPagedIterable<PopularAuctionDAO> getPopularAuctions() {
+        init();
+        return popularAuctions.queryItems("SELECT * FROM popularAuctions", new CosmosQueryRequestOptions(), 
+                PopularAuctionDAO.class);
+    }
+    
+    // -------------------  RECENT AUCTION ------------------------------------
+    
+    public CosmosPagedIterable<RecentAuctionDAO> getRecentAuctions() {
+        init();
+        return recentAuctions.queryItems("SELECT * FROM recentAuctions", new CosmosQueryRequestOptions(), 
+                RecentAuctionDAO.class);
+    }
 }

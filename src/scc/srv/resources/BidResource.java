@@ -128,7 +128,7 @@ public class BidResource {
         List<String> bids = new ArrayList<>();
 
         // this does not make sense we're only doing this for the moment
-        if (!auctionExistsInRedis(id) || !auctionExistsInDB(id))
+        if (!auctionExistsInDB(id)) // !auctionExistsInRedis(id) || 
             return bids;
 
         CosmosPagedIterable<BidDAO> bidsIterable = db_instance.getBidsByAuctionId(id);
@@ -151,6 +151,7 @@ public class BidResource {
         return auctionIt.iterator().hasNext();
     }
     
+    /**
     private boolean userExistsInRedis(String userId) {
         String res = jedis_instance.get("user:" + userId);
         
@@ -175,7 +176,7 @@ public class BidResource {
             e.printStackTrace();
         } 
         return false;
-    }
+    } **/
     
     private String checkBid(Bid bid) throws IllegalArgumentException, IllegalAccessException{
         
@@ -192,10 +193,10 @@ public class BidResource {
         if (bid.getValue() <= 0)
             return NEGATIVE_VALUE;
         
-        if (!userExistsInRedis(bid.getUserId()) || !userExistsInDB(bid.getUserId()))
+        if (!userExistsInDB(bid.getUserId())) // !userExistsInRedis(bid.getUserId()) || 
             return USER_NOT_EXISTS;
         
-        if (!auctionExistsInRedis(bid.getAuctionId()) || !auctionExistsInDB(bid.getAuctionId()))
+        if (!auctionExistsInDB(bid.getAuctionId())) // !auctionExistsInRedis(bid.getAuctionId()) || 
             return AUCTION_NOT_EXISTS;
         
         return null;
