@@ -22,7 +22,6 @@ public class MediaResource {
     
     private static final String ERROR_MSG = "Use: java scc.utils.UploadToStorage filename";
     private static final String FILE_UPLOADED = "File updloaded : %s";
-    private static final String BLOB_SIZE = "File updloaded : %d";
 
     // Get connection string in the storage access keys page
     private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;"
@@ -35,7 +34,6 @@ public class MediaResource {
             .containerName("images").buildClient();
     
     
-
     public MediaResource() {
     }
 
