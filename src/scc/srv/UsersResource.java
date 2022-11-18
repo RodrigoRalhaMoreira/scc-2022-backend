@@ -4,6 +4,7 @@ import scc.cache.RedisCache;
 
 import jakarta.ws.rs.*;
 import redis.clients.jedis.Jedis;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -28,8 +30,7 @@ public class UsersResource {
     private static final String DELETE_ERROR = "Error deleting non-existent user";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
-    private static final String ALREADY_AUTH = "User already authenticated";  
-    private static final String USER_NOT_AUTH = "User not authenticated";
+    private static final String ALREADY_AUTH = "User already authenticated";
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
@@ -81,14 +82,18 @@ public class UsersResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String update(User user) {
+    public String update(@CookieParam("scc:session") Cookie session, User user) {
 
         if (user == null) {
             return USER_NULL;
         }
 
-        if(!checkAuth(user.getId()))
-            return USER_NOT_AUTH;
+        try {
+            checkCookieUser(session, user.getId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
 
         //verify if imgId exists
         if (!media.verifyImgId(user.getPhotoId())) {
@@ -121,10 +126,14 @@ public class UsersResource {
     @Path("/{id}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public String delete(@PathParam("id") String id) {
+    public String delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 
-        if(!checkAuth(id))
-            return USER_NOT_AUTH;
+        try {
+            checkCookieUser(session, id);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
 
         int removed = 0;
         if (userExistsInDB(id)) {
@@ -138,10 +147,15 @@ public class UsersResource {
     @Path("/{id}/auctions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getAuctionsOfUser(@PathParam("id") String id) {
+    public List<String> getAuctionsOfUser(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 
-        if(!checkAuth(id))
-            throw new NotAuthorizedException(USER_NOT_AUTH);
+        try {
+            checkCookieUser(session, id);
+        } catch (Exception e) {
+            List<String> error = new ArrayList<String>();
+            error.add(e.getMessage());
+            return error;
+        }
 
         List<String> auctions = new ArrayList<>();
         Iterator<AuctionDAO> it = db_instance.getAuctionsByUserId(id).iterator();
@@ -164,13 +178,12 @@ public class UsersResource {
 
         UserDAO user = null;
 
-        if (!userExistsInDB(login.getId())) {
+        if (!userExistsInDB(login.getId()))
             throw new NotAuthorizedException(INVALID_LOGIN);
-        } else {
-            user = db_instance.getUserById(login.getId()).iterator().next();
+        if(!db_instance.getUserById(login.getId()).iterator().next().getPwd().equals(login.getPwd()))
+            throw new NotAuthorizedException(INVALID_LOGIN);
             
-            if (db_instance.getLoginById(login.getId()).iterator().hasNext())
-                throw new NotAuthorizedException(ALREADY_AUTH);
+            user = db_instance.getUserById(login.getId()).iterator().next();
 
             String uid = UUID.randomUUID().toString();
 
@@ -184,7 +197,7 @@ public class UsersResource {
                                         .build();
                 
             try {
-                jedis_instance.set("session:"+ user.getId(), mapper.writeValueAsString(new Session(uid, user.getId())));
+                jedis_instance.setex("session:"+ uid, 300, mapper.writeValueAsString(new Session(uid, user.getId())));
             } catch (JsonProcessingException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -195,17 +208,22 @@ public class UsersResource {
             db_instance.putLogin(loginDAO);*/   
 
             return Response.ok().cookie(cookie).build();
-        }
     }
 
     @Path("/{id}/following")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> following(@PathParam("id") String id) {
+    public List<String> following(@CookieParam("scc:session") Cookie session,  @PathParam("id") String id) {
 
-        if(!checkAuth(id))
-            throw new NotAuthorizedException(USER_NOT_AUTH);
+        try {
+            checkCookieUser(session, id);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            List<String> error = new ArrayList<String>();
+            error.add(e.getMessage());
+            return error;
+        }
 
         List<String> auctions = new ArrayList<>(); 
         
@@ -215,10 +233,37 @@ public class UsersResource {
         
         return auctions;
     }
+        /**
+    * Throws exception if not appropriate user for operation on Auction
+         * @throws Exception
+    */
+    public String checkCookieUser(Cookie session, String id)
+        throws Exception {
 
-    public static boolean checkAuth(String userId) {
-        String res = jedis_instance.get("session:" + userId);
-        return res != null;
+        if (session == null || session.getValue() == null)
+           throw new Exception("No session initialized");
+
+        Session s = null;
+
+        try {
+            s = mapper.readValue(jedis_instance.get("session:" + session.getValue()), Session.class);
+        } catch (JsonMappingException e) {
+            // TODO Auto-generated catch block
+            System.out.println("\n\n\n Mapping message:" + e.getMessage()); 
+        } catch (JsonProcessingException e) {
+            // TODO Auto-generated catch block
+            System.out.println("\n\n\n Processing message:" + e.getMessage()); 
+        }
+
+        System.out.println("\n\n\nSESSION redis: "+ jedis_instance.get("session:" + session.getValue()));
+
+        System.out.println("\n\n\nSESSION OBJECT: "+ s);
+
+        if (s == null || s.getUserId() == null || s.getUserId().length() == 0)
+            throw new Exception("No valid session initialized");
+        if (!s.getUserId().equals(id))
+            throw new Exception("Invalid user : " + s.getUserId());
+        return s.toString();
     }
 
     private boolean userExistsInDB(String userId) {

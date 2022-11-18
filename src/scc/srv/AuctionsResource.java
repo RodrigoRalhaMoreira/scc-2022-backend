@@ -2,10 +2,12 @@ package scc.srv;
 
 import java.util.Iterator;
 
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.ws.rs.*;
-
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import redis.clients.jedis.Jedis;
 import scc.cache.RedisCache;
@@ -21,6 +23,7 @@ public class AuctionsResource {
     private ObjectMapper mapper;
     
     private MediaResource media;
+    private UsersResource users;
 
     private static final String AUCTION_NULL = "Null auction exception";
     private static final String AUCTION_NOT_EXIST = "Auction does not exist";
@@ -35,7 +38,6 @@ public class AuctionsResource {
     private static final String NULL_ENDTIME = "Null endTime exception";
     private static final String NULL_STATUS = "Null status exception";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
-    private static final String USER_NOT_AUTH = "User not authenticated";
     
 
     public AuctionsResource() {
@@ -43,9 +45,14 @@ public class AuctionsResource {
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
         
-        for(Object resource : MainApplication.getSingletonsSet()) 
+        for(Object resource : MainApplication.getSingletonsSet())  {
             if(resource instanceof MediaResource)
                 media = (MediaResource) resource;
+            if(resource instanceof UsersResource)
+                users = (UsersResource) resource;
+        }
+            
+            
     } 
 
     /**
@@ -54,14 +61,18 @@ public class AuctionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Auction auction) {
+    public String create(@CookieParam("scc:session") Cookie session, Auction auction) {
         
         // Winning bids start by default with the value of null
         
         String result = checkAuction(auction);
 
-        if (!UsersResource.checkAuth(auction.getOwnerId()))
-            return USER_NOT_AUTH;
+        try {
+            users.checkCookieUser(session, auction.getOwnerId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
         
         if(result != null)
             return result;
@@ -93,10 +104,14 @@ public class AuctionsResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String update(Auction auction) {
+    public String update(@CookieParam("scc:session") Cookie session, Auction auction) {
 
-        if (!UsersResource.checkAuth(auction.getOwnerId()))
-                    return USER_NOT_AUTH;
+        try {
+            users.checkCookieUser(session, auction.getOwnerId());
+        } catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         
         String result = checkAuction(auction);
         

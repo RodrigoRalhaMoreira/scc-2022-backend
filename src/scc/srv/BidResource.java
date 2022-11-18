@@ -1,6 +1,7 @@
 package scc.srv;
 
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 
 import java.util.ArrayList;
@@ -23,15 +24,19 @@ public class BidResource {
     private static final String NULL_AUCTIONID = "Null auctionId exception";
     private static final String NULL_USERID = "Null userId exception";
     private static final String NEGATIVE_VALUE = "value can not be negative or zero";
-    private static final String USER_NOT_AUTH = "User not authenticated";
 
     private static CosmosDBLayer db_instance;
+    private UsersResource users;
 
     // Improvements to be made. If we have "id" of auction as PathParam we should
     // not have to pass it as param in POST request.
 
     public BidResource() {
         db_instance = CosmosDBLayer.getInstance();
+        for(Object resource : MainApplication.getSingletonsSet())  {
+            if(resource instanceof UsersResource)
+                users = (UsersResource) resource;
+        }
     }
 
     /**
@@ -40,13 +45,20 @@ public class BidResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Bid bid) {
+    public String create(@CookieParam("scc:session") Cookie session, Bid bid) {
         
         /**
          * TODO
          * REALLY IMPORTANT -->>>   ACTUAL BID HAS TO BE GREATER THAT THE WINNING BID AT THE MOMENT
          * IF WINNING BID IS CURRENTLY NULL (-> WINNING BID = BID.GETVALUE())
          */
+
+         try {
+            users.checkCookieUser(session, bid.getUserId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
         
         String result = checkBid(bid);
         
@@ -54,8 +66,6 @@ public class BidResource {
             return result;
         
         else {
-            if (!UsersResource.checkAuth(bid.getUserId()))
-                return USER_NOT_AUTH;
             // Create the bid to store in the database
             BidDAO dbbid = new BidDAO(bid);
     

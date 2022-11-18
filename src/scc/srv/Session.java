@@ -1,8 +1,12 @@
 package scc.srv;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Session {
 
+    @JsonProperty("uuid")
     private String uuid;
+    @JsonProperty("userId")
     private String userId;
 
     public Session(String uuid, String userId) {
@@ -24,5 +28,10 @@ public class Session {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    @Override
+    public String toString() {
+        return "Session [uuid= " + uuid + ", userId=" + userId + "]";
     }
 }
