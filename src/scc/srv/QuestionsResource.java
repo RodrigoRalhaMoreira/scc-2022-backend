@@ -15,7 +15,6 @@ public class QuestionsResource {
     private static final String AUCTION_ERROR = "Auction does not exist";
     private static final String USER_NOT_EXISTS = "Error non-existent user";
     private static final String AUCTION_NOT_EXISTS = "Error non-existent auction";
-    private static final String USER_NOT_AUTH = "User not authenticated";
 
     private static CosmosDBLayer db_instance;
     private UsersResource users;
