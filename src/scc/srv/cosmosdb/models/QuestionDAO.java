@@ -65,6 +65,10 @@ public class QuestionDAO {
 	public String getReply() {
         return reply;
     }
+	
+	public void setReply(String reply) {
+        this.reply = reply;
+	}
 
 	public Question toQuestion() {
 		return new Question(id, auctionId, userId, message, reply);

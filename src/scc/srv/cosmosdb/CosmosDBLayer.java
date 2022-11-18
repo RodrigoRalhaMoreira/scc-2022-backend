@@ -145,6 +145,13 @@ public class CosmosDBLayer {
                 BidDAO.class);
     }
     
+    public CosmosPagedIterable<QuestionDAO> getQuestionsById(String id) {
+        init();
+        return questions.queryItems("SELECT * FROM questions WHERE questions.id=\"" + id + "\"",
+                new CosmosQueryRequestOptions(),
+                QuestionDAO.class);
+    }
+    
     public CosmosPagedIterable<QuestionDAO> getQuestionsByAuctionId(String id) {
         init();
         return questions.queryItems("SELECT * FROM questions WHERE questions.auctionId=\"" + id + "\"",
@@ -162,6 +169,11 @@ public class CosmosDBLayer {
     public CosmosItemResponse<AuctionDAO> updateAuction(AuctionDAO dbAuction) {
         init();
         return auctions.upsertItem(dbAuction);
+    }
+    
+    public CosmosItemResponse<QuestionDAO> updateQuestion(QuestionDAO dbQuestion) {
+        init();
+        return questions.upsertItem(dbQuestion);
     }
 
     public CosmosItemResponse<LoginDAO> putLogin(LoginDAO loginDAO) {
