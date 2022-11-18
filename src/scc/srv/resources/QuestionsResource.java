@@ -111,7 +111,7 @@ public class QuestionsResource {
         if(!auctionExistsInDB(auctionId)) 
             return null;
         
-        if(!questionExistsInDB(auctionId))
+        if(!questionExistsInDB(questionId))
             return null;
         
         return getQuestionById(questionId);
@@ -172,6 +172,11 @@ public class QuestionsResource {
         return dbReply.getMessage();
     }
 
+    
+    
+    // --------------------------------------------------- PRIVATE METHODS ----------------------------------------
+    
+    
     private String getAuctionOwner(String auctionId) {
         Iterator<AuctionDAO> auctionsIt = db_instance.getAuctionById(auctionId).iterator();
         while(auctionsIt.hasNext())
