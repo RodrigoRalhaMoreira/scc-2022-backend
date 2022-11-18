@@ -19,17 +19,32 @@ import jakarta.ws.rs.core.MediaType;
  */
 @Path("/media")
 public class MediaResource {
-
-    private static final String NULL_IMAGE = "Null image exception";
-    private static final String FILE_UPLOADED = "File updloaded: ";
     
+    private static final String ERROR_MSG = "Use: java scc.utils.UploadToStorage filename";
+    private static final String FILE_UPLOADED = "File updloaded : %s";
+    private static final String BLOB_SIZE = "File updloaded : %d";
+
     // Get connection string in the storage access keys page
-    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;EndpointSuffix=core.windows.net";
+    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;"
+            + "AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;"
+            + "EndpointSuffix=core.windows.net";
 
     // Get container client
-    private BlobContainerClient containerClient = new BlobContainerClientBuilder().connectionString(storageConnectionString)
-                                                      .containerName("images").buildClient();
+    private BlobContainerClient containerClient = new BlobContainerClientBuilder()
+            .connectionString(storageConnectionString)
+            .containerName("images").buildClient();
     
+    
+
+    public MediaResource() {
+    }
+
+    public MediaResource(String connectionString) {
+        storageConnectionString = connectionString;
+        containerClient = new BlobContainerClientBuilder().connectionString(storageConnectionString)
+                .containerName("images").buildClient();
+    }
+
     /**
      * Post a new image.The id of the image is its hash.
      */
@@ -38,10 +53,10 @@ public class MediaResource {
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     public String upload(byte[] contents) {
-        
-        if(contents == null) 
-            return NULL_IMAGE;
-        
+
+        if (contents == null)
+            return ERROR_MSG;
+
         String filename = Hash.of(contents);
 
         try {
@@ -53,12 +68,12 @@ public class MediaResource {
 
             // Upload contents from BinaryData (check documentation for other alternatives)
             blob.upload(data);
-            
-        } catch( Exception e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        
-        return FILE_UPLOADED + filename;
+
+        return String.format(FILE_UPLOADED, filename);
     }
 
     /**
