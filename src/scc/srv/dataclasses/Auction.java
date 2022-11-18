@@ -2,6 +2,7 @@ package scc.srv.dataclasses;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -21,6 +22,7 @@ public class Auction {
     @JsonProperty("ownerId")
     private String ownerId;
     @JsonProperty("endTime")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DDThh:mm:ss.fffffffZ")
     private Date endTime;
     @JsonProperty("minPrice")
     private int minPrice;

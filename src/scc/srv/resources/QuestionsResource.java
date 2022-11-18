@@ -1,6 +1,7 @@
 package scc.srv.resources;
 
 import jakarta.ws.rs.*;
+import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
 import scc.srv.cosmosdb.CosmosDBLayer;
 import scc.srv.cosmosdb.models.AuctionDAO;
@@ -15,6 +16,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * Resource for managing questions.
@@ -31,31 +35,38 @@ public class QuestionsResource {
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
 
     private static CosmosDBLayer db_instance;
+    private static Jedis jedis_instance;
+    private ObjectMapper mapper;
 
     // Improvements to be made. If we have "id" of auction as PathParam we should
     // not have to pass it as param in POST request.
 
     public QuestionsResource() {
         db_instance = CosmosDBLayer.getInstance();
+        jedis_instance = RedisCache.getCachePool().getResource();
+        mapper = new ObjectMapper();
     }
 
     /**
      * Creates a new question.
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Question question) throws IllegalArgumentException, IllegalAccessException {
-        
-        String error = checkQuestion(question);
-        
-        if(error != null)
-            return error;
+    public String create(Question question) {
+        if (question == null)
+            return QUESTION_NULL;
+
+        if (!userExistsInDB(question.getUserId()))
+            return USER_NOT_EXISTS;
+
+        // this does not make sense we're only doing this for the moment
+        if (!auctionExistsInDB(question.getAuctionId()))
+            return AUCTION_NOT_EXISTS;
 
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
+        jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
 
         db_instance.putQuestion(dbquestion);
         return dbquestion.getId();
@@ -83,29 +94,25 @@ public class QuestionsResource {
     // Later improve this to get auctionId of the path
     /**
      * Reply to a question.
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
      */
     @Path("/{id}/reply")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String reply(Question question, @PathParam("id") String id) throws IllegalArgumentException, IllegalAccessException {
-        
-        // Winning bids start by default with the value of null
-        String error = checkQuestion(question);
-        
-        if(error != null)
-            return error;
+    public String reply(Question question,
+            @PathParam("id") String id) {
+        if (question == null)
+            return QUESTION_NULL;
 
         if (!question.getUserId().equals(getAuctionOwner(question.getAuctionId())))
             return ONLY_OWNER_ERROR;
 
         QuestionDAO dbReply = new QuestionDAO(question);
+        jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
         db_instance.putQuestion(dbReply);
         return dbReply.getId();
     }
-    
+
     private String getAuctionOwner(String auctionId) {
         CosmosPagedIterable<AuctionDAO> auctionsIt = db_instance.getAuctionById(auctionId);
         if (!auctionsIt.iterator().hasNext())
