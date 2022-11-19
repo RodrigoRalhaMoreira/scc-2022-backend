@@ -11,21 +11,21 @@ public class BidDAO {
     private String id;
     private String auctionId;
     private String userId;
-    private int value;
+    private int amount;
 
     public BidDAO() {
     }
 
     public BidDAO(Bid b) {
-        this(b.getId(), b.getAuctionId(), b.getUserId(), b.getValue());
+        this(b.getId(), b.getAuctionId(), b.getUserId(), b.getAmount());
     }
 
-    public BidDAO(String id, String auctionId, String userId, int value) {
+    public BidDAO(String id, String auctionId, String userId, int amount) {
         super();
         this.id = id;
         this.auctionId = auctionId;
         this.userId = userId;
-        this.value = value;
+        this.amount = amount;
     }
 
     public String get_rid() {
@@ -56,17 +56,17 @@ public class BidDAO {
         return userId;
     }
 
-    public int getValue() {
-        return value;
+    public int getAmount() {
+        return amount;
     }
 
     public Bid toBid() {
-        return new Bid(id, auctionId, userId, value);
+        return new Bid(id, auctionId, userId, amount);
     }
 
     @Override
     public String toString() {
         return "BidDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", auctionId=" + auctionId
-                + ", userId=" + userId + ", value=" + value + "]";
+                + ", userId=" + userId + ", amount=" + amount + "]";
     }
 }

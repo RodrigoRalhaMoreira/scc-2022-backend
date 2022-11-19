@@ -7,6 +7,7 @@ import scc.srv.cosmosdb.models.AuctionDAO;
 import scc.srv.cosmosdb.models.BidDAO;
 import scc.srv.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.Auction;
+import scc.srv.dataclasses.AuctionStatus;
 import scc.srv.dataclasses.Bid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Cookie;
@@ -98,16 +99,16 @@ public class BidResource {
         int auctionMinPrice = redis_auction.getMinPrice(); 
         
         // bid value has to be higher than current winning bid for that auction
-        if(auctionWinningBid != null && auctionWinningBid.getValue() >= bid.getValue())
+        if(auctionWinningBid != null && auctionWinningBid.getAmount() >= bid.getAmount())
             return LOWER_BIDVALUE;
         
         if(auctionOwnerId.equals(bid.getUserId()))
             return SAME_OWNER;
         
-        if(!auctionStatus.equals("open"))
+        if(!auctionStatus.equals(AuctionStatus.OPEN.getStatus()))
             return AUCTION_NOT_OPEN;
         
-        if(bid.getValue() < auctionMinPrice)
+        if(bid.getAmount() < auctionMinPrice)
             return LOWER_THAN_MIN_VALUE;
 
         jedis_instance.setex("auction:" + redis_auction.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(redis_auction));
@@ -208,7 +209,7 @@ public class BidResource {
                 return String.format(NULL_FIELD_EXCEPTION, f.getName());
         }
         
-        if (bid.getValue() <= 0)
+        if (bid.getAmount() <= 0)
             return NEGATIVE_VALUE;
 
         if (!userExistsInDB(bid.getUserId()))
