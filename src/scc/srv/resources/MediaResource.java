@@ -1,18 +1,17 @@
 package scc.srv.resources;
 
-import jakarta.ws.rs.*;
 import scc.utils.Hash;
-import java.util.ArrayList;
-import java.util.List;
 
-import com.azure.core.http.rest.PagedIterable;
+import jakarta.ws.rs.*;
+import java.util.List;
+import java.util.ArrayList;
+import jakarta.ws.rs.core.MediaType;
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
+import com.azure.core.http.rest.PagedIterable;
+import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
-import com.azure.storage.blob.models.BlobItem;
-
-import jakarta.ws.rs.core.MediaType;
 
 /**
  * Resource for managing media files, such as images.
@@ -21,7 +20,7 @@ import jakarta.ws.rs.core.MediaType;
 public class MediaResource {
 
     private static final String ERROR_MSG = "Use: java scc.utils.UploadToStorage filename";
-    
+
     // Get connection string in the storage access keys page
     private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;EndpointSuffix=core.windows.net";
 
