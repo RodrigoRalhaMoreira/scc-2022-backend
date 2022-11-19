@@ -22,5 +22,4 @@ public class BlobStoreFunction {
 		MediaResource media_instance = new MediaResource(connectionString);
 		media_instance.upload(content);
 	}
-
 }

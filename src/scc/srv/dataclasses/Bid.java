@@ -13,18 +13,18 @@ public class Bid {
     private String auctionId;
     @JsonProperty("userId")
     private String userId;
-    @JsonProperty("value")
-    private int value;
+    @JsonProperty("amount")
+    private int amount;
 
     public Bid() {
         super();
     }
 
-    public Bid(String id, String auctionId, String userId, int value) {
+    public Bid(String id, String auctionId, String userId, int amount) {
         this.id = id;
         this.auctionId = auctionId;
         this.userId = userId;
-        this.value = value;
+        this.amount = amount;
     }
 
     public String getId() {
@@ -39,14 +39,14 @@ public class Bid {
         return userId;
     }
 
-    public int getValue() {
-        return value;
+    public int getAmount() {
+        return amount;
     }
 
     @Override
     public String toString() {
-        return "Bid [id=" + id + ", auctionId=" + auctionId + ", userId=" + userId + ", value="
-                + value + "]";
+        return "Bid [id=" + id + ", auctionId=" + auctionId + ", userId=" + userId + ", amount="
+                + amount + "]";
     }
 
 }
