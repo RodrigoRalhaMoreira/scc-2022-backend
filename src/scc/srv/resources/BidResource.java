@@ -38,6 +38,7 @@ public class BidResource {
     private static final String AUCTION_NOT_OPEN = "Can only bid in an open auction";
     private static final String LOWER_THAN_MIN_VALUE = "Value can not be lower than auction's minValue";
     private static final String LOWER_BIDVALUE = "Current bid value has to be higher than current winning bid value for that auction";
+    private static final int DEFAULT_REDIS_EXPIRE = 600;
 
     private static CosmosDBLayer db_instance;
     private UsersResource users;
@@ -91,7 +92,7 @@ public class BidResource {
         String res = jedis_instance.get("auction:" + bid.getAuctionId());
         Auction redis_auction = mapper.readValue(res, Auction.class); //Auction
         
-        Bid auctionWinningBid = redis_auction.getWinnigBid();
+        Bid auctionWinningBid = redis_auction.getWinningBid();
         String auctionOwnerId = redis_auction.getOwnerId();
         String auctionStatus = redis_auction.getStatus();
         int auctionMinPrice = redis_auction.getMinPrice(); 
@@ -109,8 +110,8 @@ public class BidResource {
         if(bid.getValue() < auctionMinPrice)
             return LOWER_THAN_MIN_VALUE;
 
-        jedis_instance.set("auction:" + redis_auction.getId(), mapper.writeValueAsString(redis_auction));
-        jedis_instance.set("bid:" + bid.getId(), mapper.writeValueAsString(bid));
+        jedis_instance.setex("auction:" + redis_auction.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(redis_auction));
+        jedis_instance.setex("bid:" + bid.getId(), DEFAULT_REDIS_EXPIRE,mapper.writeValueAsString(bid));
 
         // Updates the auction in the database
         AuctionDAO dbAuction = new AuctionDAO(redis_auction);

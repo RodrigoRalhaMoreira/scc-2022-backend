@@ -40,10 +40,8 @@ public class UsersResource {
     private static final String DELETE_ERROR = "Error deleting non-existent user";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
     private static final String USER_ALREADY_EXISTS = "UserId already exists";
-    private static final String LOGIN_NULL = "Login null exception";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
-    private static final String ALREADY_AUTH = "User already authenticated";
-    private static final String USER_NOT_AUTH = "User not authenticated";
+    private static final int DEFAULT_REDIS_EXPIRE = 600;
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
@@ -82,7 +80,7 @@ public class UsersResource {
 
         UserDAO userDao = new UserDAO(user);
         try {
-            jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(user));
+            jedis_instance.setex("user:" + user.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(user));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -118,7 +116,7 @@ public class UsersResource {
         try {
             String res = jedis_instance.get("user:" + user.getId());
             if (res != null) {
-                jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(user));
+                jedis_instance.setex("user:" + user.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(user));
                 db_instance.updateUser(userDao);
                 return userDao.getId();
             }
@@ -218,7 +216,7 @@ public class UsersResource {
                                         .build();
                 
             try {
-                jedis_instance.setex("session:"+ uid, 300, mapper.writeValueAsString(new Session(uid, user.getId())));
+                jedis_instance.setex("session:"+ uid, DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(new Session(uid, user.getId())));
             } catch (JsonProcessingException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

@@ -103,11 +103,11 @@ public class Auction {
         this.minPrice = minPrice;
     }
 
-    public Bid getWinnigBid() {
+    public Bid getWinningBid() {
         return winningBid;
     }
 
-    public void setWinnigBid(Bid winningBid) {
+    public void setWinningBid(Bid winningBid) {
         this.winningBid = winningBid;
     }
 

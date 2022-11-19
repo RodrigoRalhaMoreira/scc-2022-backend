@@ -40,6 +40,7 @@ public class QuestionsResource {
     private static final String AUCTION_ID_NOT_EXISTS_DB = "Auction does not exist in the DataBase";
     private static final String SAME_OWNER = "Owner can not ask a question in his auction";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    private static final int DEFAULT_REDIS_EXPIRE = 600;
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
@@ -89,7 +90,7 @@ public class QuestionsResource {
             
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
-        jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
+        jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
 
         db_instance.putQuestion(dbquestion);
         return dbquestion.getMessage();
@@ -174,8 +175,8 @@ public class QuestionsResource {
             String res = jedis_instance.get("question:" + questioned.getId());
             if(res != null) {
                 questioned.setReply(newReply);
-                jedis_instance.set("question:" + questioned.getId(), mapper.writeValueAsString(questioned));
-                jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
+                jedis_instance.setex("question:" + questioned.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(questioned));
+                jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
             }
         } catch (Exception e) {
             // TODO: handle exception

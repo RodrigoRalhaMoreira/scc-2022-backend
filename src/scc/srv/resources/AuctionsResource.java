@@ -8,7 +8,6 @@ import scc.srv.cosmosdb.models.PopularAuctionDAO;
 import scc.srv.cosmosdb.models.RecentAuctionDAO;
 import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.AuctionStatus;
-import scc.srv.dataclasses.Bid;
 import jakarta.ws.rs.*;
 
 import java.util.ArrayList;
@@ -21,6 +20,7 @@ import jakarta.ws.rs.core.MediaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.Cookie;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import scc.srv.dataclasses.Bid;
 
 /**
  * Resource for managing auction.
@@ -44,6 +44,9 @@ public class AuctionsResource {
 
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
+    private static final int DEFAULT_REDIS_EXPIRE = 600;
+    
+    
 
 
     public AuctionsResource() {
@@ -93,7 +96,7 @@ public class AuctionsResource {
         
         // Create the user to store in the database and cache
         try {
-            jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(auction));
+            jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(auction));
         } catch (Exception e) {
             // TODO: handle exception
         }
@@ -146,7 +149,7 @@ public class AuctionsResource {
         try {
             String res = jedis_instance.get("auction:" + auction.getId());
             if (res != null) {
-                jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(auction));
+                jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(auction));
             }
         } catch (Exception e) {
             // TODO: handle exception
@@ -224,6 +227,13 @@ public class AuctionsResource {
                 return auctionStatus.getValue();
         
         return -1;
+    }
+    
+    public Bid getAuctionWinningBid(String id) {
+        Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
+        if (it.hasNext())
+            return ((((AuctionDAO) it.next()).toAuction().getWinningBid()));
+        return null;
     }
     
     private String getStatusAuction(String id) {
