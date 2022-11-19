@@ -1,6 +1,8 @@
-package scc.srv;
+package scc.srv.cosmosdb.models;
 
 import java.util.Arrays;
+
+import scc.srv.dataclasses.User;
 
 /**
  * Represents a User, as stored in the database

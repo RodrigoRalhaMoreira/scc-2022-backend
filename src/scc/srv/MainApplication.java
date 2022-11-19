@@ -4,6 +4,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.ws.rs.core.Application;
+import scc.srv.resources.AuctionsResource;
+import scc.srv.resources.BidResource;
+import scc.srv.resources.ControlResource;
+import scc.srv.resources.MediaResource;
+import scc.srv.resources.QuestionsResource;
+import scc.srv.resources.UsersResource;
 
 public class MainApplication extends Application {
     private static Set<Object> singletons = new HashSet<Object>();

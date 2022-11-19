@@ -1,6 +1,9 @@
-package scc.srv;
+package scc.srv.cosmosdb.models;
 
 import java.util.Date;
+
+import scc.srv.dataclasses.Auction;
+import scc.srv.dataclasses.Bid;
 
 public class AuctionDAO {
 

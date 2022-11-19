@@ -2,9 +2,9 @@ package scc.serverless.main;
 
 import com.microsoft.azure.functions.annotation.*;
 
-import scc.srv.AuctionDAO;
-import scc.srv.Bid;
-import scc.srv.CosmosDBLayer;
+import scc.srv.cosmosdb.CosmosDBLayer;
+import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.srv.dataclasses.Bid;
 
 import com.microsoft.azure.functions.*;
 
