@@ -44,23 +44,26 @@ public class UsersResource {
         mapper = new ObjectMapper();
 
         for (Object resource : MainApplication.getSingletonsSet())
-            if (resource instanceof MediaResource)
+            if (resource instanceof MediaResource) {
                 media = (MediaResource) resource;
+                break;
+            }
     }
 
     /**
      * Creates a new user.The id of the user is its hash.
+     * 
+     * @throws JsonProcessingException
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(User user) {
+    public String create(User user) throws JsonProcessingException {
         if (user == null)
             return USER_NULL;
 
         // verify if imgId exists
         if (!media.verifyImgId(user.getPhotoId())) {
-            System.out.println(IMG_NOT_EXIST);
             return IMG_NOT_EXIST;
         }
 
@@ -69,11 +72,9 @@ public class UsersResource {
             return USER_ALREADY_EXISTS;
 
         UserDAO userDao = new UserDAO(user);
-        try {
-            jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(user));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(user));
+
         db_instance.putUser(userDao);
         return userDao.getId();
     }
@@ -98,7 +99,7 @@ public class UsersResource {
             return e.getMessage();
         }
 
-        //verify if imgId exists
+        // verify if imgId exists
         if (!media.verifyImgId(user.getPhotoId())) {
             System.out.println(IMG_NOT_EXIST);
             return IMG_NOT_EXIST;
@@ -140,7 +141,11 @@ public class UsersResource {
 
         int removed = 0;
         if (userExistsInDB(id)) {
-            db_instance.delUserById(id);
+            UserDAO user = db_instance.getUserById(session.getValue()).iterator().next();
+            user.setDeletedUser();
+            // a trigger is called upon this update to handle user auctions and bids and
+            // delete him after
+            db_instance.updateUser(user);
             removed = 1;
         }
         jedis_instance.del("user:" + id);
@@ -188,37 +193,37 @@ public class UsersResource {
 
         if (!userExistsInDB(login.getId()))
             throw new NotAuthorizedException(INVALID_LOGIN);
-        if(!db_instance.getUserById(login.getId()).iterator().next().getPwd().equals(login.getPwd()))
+        if (!db_instance.getUserById(login.getId()).iterator().next().getPwd().equals(login.getPwd()))
             throw new NotAuthorizedException(INVALID_LOGIN);
-            
-            user = db_instance.getUserById(login.getId()).iterator().next();
 
-            String uid = UUID.randomUUID().toString();
+        user = db_instance.getUserById(login.getId()).iterator().next();
 
-                NewCookie cookie = new NewCookie.Builder("scc:session")
-                                        .value(uid)
-                                        .path("/")
-                                        .comment("sessionid")
-                                        .maxAge(3600)
-                                        .secure(false)
-                                        .httpOnly(true)
-                                        .build();
-                
-            try {
-                jedis_instance.setex("session:"+ uid, 300, mapper.writeValueAsString(new Session(uid, user.getId())));
-            } catch (JsonProcessingException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+        String uid = UUID.randomUUID().toString();
 
-            return Response.ok().cookie(cookie).build();
+        NewCookie cookie = new NewCookie.Builder("scc:session")
+                .value(uid)
+                .path("/")
+                .comment("sessionid")
+                .maxAge(3600)
+                .secure(false)
+                .httpOnly(true)
+                .build();
+
+        try {
+            jedis_instance.setex("session:" + uid, 300, mapper.writeValueAsString(new Session(uid, user.getId())));
+        } catch (JsonProcessingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return Response.ok().cookie(cookie).build();
     }
 
     @Path("/{id}/following")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> following(@CookieParam("scc:session") Cookie session,  @PathParam("id") String id) {
+    public List<String> following(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 
         try {
             checkCookieUser(session, id);
@@ -229,35 +234,27 @@ public class UsersResource {
             return error;
         }
 
-        List<String> auctions = new ArrayList<>(); 
-        
+        List<String> auctions = new ArrayList<>();
+
         Iterator<AuctionDAO> it = db_instance.getAuctionUserFollow(id).iterator();
-        while(it.hasNext())
+        while (it.hasNext())
             auctions.add(it.next().toAuction().toString());
-        
+
         return auctions;
     }
-        /**
-    * Throws exception if not appropriate user for operation on Auction
-         * @throws Exception
-    */
+
+    /**
+     * Throws exception if not appropriate user for operation on Auction
+     * 
+     * @throws Exception
+     */
     public String checkCookieUser(Cookie session, String id)
-        throws Exception {
+            throws Exception {
 
         if (session == null || session.getValue() == null)
-           throw new Exception("No session initialized");
+            throw new Exception("No session initialized");
 
-        Session s = null;
-
-        try {
-            s = mapper.readValue(jedis_instance.get("session:" + session.getValue()), Session.class);
-        } catch (JsonMappingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        Session s = mapper.readValue(jedis_instance.get("session:" + session.getValue()), Session.class);
 
         if (s == null || s.getUserId() == null || s.getUserId().length() == 0)
             throw new Exception("No valid session initialized");

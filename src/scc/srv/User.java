@@ -19,6 +19,7 @@ public class User {
     private String photoId;
     @JsonProperty("channelIds")
     private String[] channelIds;
+    private boolean isDeleted;
 
     public User() {
         super();
@@ -30,6 +31,7 @@ public class User {
         this.pwd = pwd;
         this.photoId = photoId;
         this.channelIds = channelIds;
+        this.isDeleted = false;
     }
 
     public String getId() {
@@ -72,10 +74,18 @@ public class User {
         this.channelIds = channelIds;
     }
 
+    public boolean getDeletedUser() {
+        return this.isDeleted;
+    }
+
+    public void setDeletedUser() {
+        this.isDeleted = true;
+    }
+
     @Override
     public String toString() {
         return "User [id=" + id + ", name=" + name + ", pwd=" + pwd + ", photoId=" + photoId + ", channelIds="
-                + Arrays.toString(channelIds) + "]";
+                + Arrays.toString(channelIds) + ", isDeleted=" + String.valueOf(isDeleted) + "]";
     }
-    
+
 }

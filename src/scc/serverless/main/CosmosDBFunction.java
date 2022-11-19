@@ -5,7 +5,9 @@ import com.microsoft.azure.functions.annotation.*;
 import scc.srv.AuctionDAO;
 import scc.srv.Bid;
 import scc.srv.CosmosDBLayer;
+import scc.srv.UserDAO;
 
+import com.google.gson.Gson;
 import com.microsoft.azure.functions.*;
 
 /**
@@ -15,19 +17,17 @@ public class CosmosDBFunction {
 
 	private static CosmosDBLayer db_instance;
 
-	@FunctionName("bidInAuction")
+	@FunctionName("userDelete")
 	public void updateAuctionWithBid(
-			@CosmosDBTrigger(name = "items", databaseName = "scc23groupdrt", collectionName = "bids", connectionStringSetting = "AzureCosmosDBConnection") String[] items,
+			@CosmosDBTrigger(name = "items", databaseName = "scc23groupdrt", collectionName = "users", connectionStringSetting = "AccountEndpoint=https://scc23groupdrt.documents.azure.com:443/;AccountKey=nNaQx90GgUrilUlFIx9N1B7zv8wzblpSczL4IGGbFNIt5Q2YiOImwWUxIwieZmXbE3ELDhKSDSlbACDbwYwY4A==;") String[] items,
 			final ExecutionContext context) {
 
-		/*
-		 * AuctionDAO auctionDAO =
-		 * db_instance.getAuctionById(bid.getAuctionId()).iterator().next();
-		 * auctionDAO.setWinnigBid(bid);
-		 * db_instance.putAuction(auctionDAO);
-		 */
-		for (String s : items)
-			context.getLogger().info(s + "\n\n");
+		for (String s : items) {
+			System.out.println("ITEM INCOMING");
+			System.out.println(s);
+			Gson g = new Gson();
+			UserDAO user = g.fromJson(s, UserDAO.class);
+		}
 	}
 
 }

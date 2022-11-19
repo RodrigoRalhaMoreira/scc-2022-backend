@@ -13,6 +13,7 @@ public class UserDAO {
 	private String pwd;
 	private String photoId;
 	private String[] channelIds;
+	private boolean isDeleted;
 
 	public UserDAO() {
 	}
@@ -28,6 +29,7 @@ public class UserDAO {
 		this.pwd = pwd;
 		this.photoId = photoId;
 		this.channelIds = channelIds;
+		this.isDeleted = false;
 	}
 
 	public String get_rid() {
@@ -91,10 +93,19 @@ public class UserDAO {
 				channelIds == null ? null : Arrays.copyOf(channelIds, channelIds.length));
 	}
 
+	public boolean getDeletedUser() {
+		return this.isDeleted;
+	}
+
+	public void setDeletedUser() {
+		this.isDeleted = true;
+	}
+
 	@Override
 	public String toString() {
 		return "UserDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", name=" + name + ", pwd=" + pwd
-				+ ", photoId=" + photoId + ", channelIds=" + Arrays.toString(channelIds) + "]";
+				+ ", photoId=" + photoId + ", channelIds=" + Arrays.toString(channelIds) + ", isDeleted="
+				+ String.valueOf(isDeleted) + "]";
 	}
 
 }

@@ -5,7 +5,7 @@
   <groupId>pt.unl.fct.di.scc</groupId>  
   <artifactId>scc2223-lab1</artifactId>  
   <version>1.0</version>  
-  <packaging>jar</packaging>  
+  <packaging>war</packaging>  
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
     <authors>XXXXX-YYYYY-ZZZZZ</authors>
