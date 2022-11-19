@@ -15,16 +15,17 @@ public class CosmosDBFunction {
 
 	private static CosmosDBLayer db_instance;
 
-	@FunctionName("userDelete")
+	@FunctionName("userSoftDelete")
 	public void updateAuctionWithBid(
 			@CosmosDBTrigger(name = "items", databaseName = "scc23groupdrt", collectionName = "users", connectionStringSetting = "AccountEndpoint=https://scc23groupdrt.documents.azure.com:443/;AccountKey=nNaQx90GgUrilUlFIx9N1B7zv8wzblpSczL4IGGbFNIt5Q2YiOImwWUxIwieZmXbE3ELDhKSDSlbACDbwYwY4A==;") String[] items,
 			final ExecutionContext context) {
 
+		context.getLogger().info("COSMOS is triggered USER DELETE: " + items);
 		for (String s : items) {
-			System.out.println("ITEM INCOMING");
-			System.out.println(s);
+			context.getLogger().info("ITEM: " + s);
 			Gson g = new Gson();
 			UserDAO user = g.fromJson(s, UserDAO.class);
+			context.getLogger().info("USER: " + user.toString());
 		}
 	}
 
