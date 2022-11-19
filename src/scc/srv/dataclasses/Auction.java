@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Represents an Auction
  */
+
 public class Auction {
 
     @JsonProperty("id")
@@ -21,7 +22,7 @@ public class Auction {
     @JsonProperty("ownerId")
     private String ownerId;
     @JsonProperty("endTime")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DD'T'HH:MM:SS:MS") // YYYY-MM-DDThh:mm:ss.fffffffZ
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DD'T'HH:MM:SS:MS")
     private Date endTime;
     @JsonProperty("minPrice")
     private int minPrice;
@@ -102,11 +103,11 @@ public class Auction {
         this.minPrice = minPrice;
     }
 
-    public Bid getWinnigBid() {
+    public Bid getWinningBid() {
         return winningBid;
     }
 
-    public void setWinnigBid(Bid winningBid) {
+    public void setWinningBid(Bid winningBid) {
         this.winningBid = winningBid;
     }
 

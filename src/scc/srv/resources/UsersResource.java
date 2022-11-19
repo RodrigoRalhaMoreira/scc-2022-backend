@@ -2,24 +2,30 @@ package scc.srv.resources;
 
 import scc.cache.RedisCache;
 import scc.srv.MainApplication;
+import scc.srv.Session;
 import scc.srv.cosmosdb.CosmosDBLayer;
 import scc.srv.cosmosdb.models.AuctionDAO;
 import scc.srv.cosmosdb.models.BidDAO;
-import scc.srv.cosmosdb.models.LoginDAO;
 import scc.srv.cosmosdb.models.QuestionDAO;
 import scc.srv.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.Login;
 import scc.srv.dataclasses.User;
 import jakarta.ws.rs.*;
 import redis.clients.jedis.Jedis;
+import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -28,29 +34,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Path("/user")
 public class UsersResource {
 
-    private static final String USER_NULL = "User null exception";
-    private static final String LOGIN_NULL = "Login null exception";
+    private static final String USER_NULL = "Error creating null user";
+    private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String UPDATE_ERROR = "Error updating non-existent user";
     private static final String DELETE_ERROR = "Error deleting non-existent user";
-    private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_LOGIN = "UserId or password incorrect";
+    private static final String USER_ALREADY_EXISTS = "UserId already exists";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
-    private static final String ALREADY_AUTH = "User already authenticated";
-    private static final String USER_NOT_AUTH = "User not authenticated";
+    private static final int DEFAULT_REDIS_EXPIRE = 600;
 
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
-    
     private ObjectMapper mapper;
+
     private MediaResource media;
 
     public UsersResource() {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
-        
-        for(Object resource : MainApplication.getSingletonsSet())
-            if(resource instanceof MediaResource)
+
+        for (Object resource : MainApplication.getSingletonsSet())
+            if (resource instanceof MediaResource)
                 media = (MediaResource) resource;
     }
 
@@ -69,9 +74,13 @@ public class UsersResource {
         if(error != null)
             return error;
 
+        String res = jedis_instance.get("user:" + user.getId());
+        if (res != null)
+            return USER_ALREADY_EXISTS;
+
         UserDAO userDao = new UserDAO(user);
         try {
-            jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(userDao));
+            jedis_instance.setex("user:" + user.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(user));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,18 +98,25 @@ public class UsersResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String update(User user) throws IllegalArgumentException, IllegalAccessException {
-        
+    public String update(@CookieParam("scc:session") Cookie session, User user) throws IllegalArgumentException, IllegalAccessException {
+
+        try {
+            checkCookieUser(session, user.getId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
+
         String error = checkUser(user);
         
         if(error != null)
             return error;
-        
+
         UserDAO userDao = new UserDAO(user);
         try {
             String res = jedis_instance.get("user:" + user.getId());
-            if (res != user.getId() && res != null) {
-                jedis_instance.set("user:" + user.getId(), mapper.writeValueAsString(userDao));
+            if (res != null) {
+                jedis_instance.setex("user:" + user.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(user));
                 db_instance.updateUser(userDao);
                 return userDao.getId();
             }
@@ -123,9 +139,16 @@ public class UsersResource {
     @Path("/{id}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public String delete(@PathParam("id") String id) {
+    public String delete(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+
+        try {
+            checkCookieUser(session, id);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
+
         int removed = 0;
-        
         if (userExistsInDB(id)) {
             db_instance.delUserById(id);
             removed = 1;
@@ -135,13 +158,24 @@ public class UsersResource {
         return removed > 0 ? id : DELETE_ERROR;
     }
 
+    // not sure if we want this information cached (map with string(UserId) ->
+    // set<Auctions>)
     @Path("/{id}/auctions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getAuctionsOfUser(@PathParam("id") String id) {
+    public List<String> getAuctionsOfUser(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+
+        try {
+            checkCookieUser(session, id);
+        } catch (Exception e) {
+            List<String> error = new ArrayList<String>();
+            error.add(e.getMessage());
+            return error;
+        }
+
         List<String> auctions = new ArrayList<>();
         Iterator<AuctionDAO> it = db_instance.getAuctionsByUserId(id).iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             auctions.add((it.next().toAuction()).toString());
         }
         return auctions;
@@ -149,45 +183,61 @@ public class UsersResource {
 
     /**
      * Login Method
+     * 
      * @param login
      * @return
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
+     * @throws JsonProcessingException
+     * @throws JsonMappingException
      */
     @Path("/auth")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String login(Login login) throws IllegalArgumentException, IllegalAccessException {
-        
-       UserDAO user = null;
-       String error = checkLoginUser(login);
-        
-       if(error != null)
-           return error;
-        
-       else {
+    public Response auth(Login login) {
+
+        UserDAO user = null;
+
+        if (!userExistsInDB(login.getId()))
+            throw new NotAuthorizedException(INVALID_LOGIN);
+        if(!db_instance.getUserById(login.getId()).iterator().next().getPwd().equals(login.getPwd()))
+            throw new NotAuthorizedException(INVALID_LOGIN);
             
-           user = db_instance.getUserById(login.getId()).iterator().next();
+            user = db_instance.getUserById(login.getId()).iterator().next();
 
-           if (!user.getPwd().equals(login.getPwd()))
-                return INVALID_LOGIN;
-   
-            LoginDAO loginDAO = new LoginDAO(login);
+            String uid = UUID.randomUUID().toString();
 
-            db_instance.putLogin(loginDAO);
-            return loginDAO.getId();
-       }
+                NewCookie cookie = new NewCookie.Builder("scc:session")
+                                        .value(uid)
+                                        .path("/")
+                                        .comment("sessionid")
+                                        .maxAge(3600)
+                                        .secure(false)
+                                        .httpOnly(true)
+                                        .build();
+                
+            try {
+                jedis_instance.setex("session:"+ uid, DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(new Session(uid, user.getId())));
+            } catch (JsonProcessingException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            return Response.ok().cookie(cookie).build();
     }
     
     @Path("/{id}/auctions?status=\"OPEN\"")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> openAuctionsUserList(@PathParam("id") String id) {
+    public List<String> openAuctionsUserList(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 
-        if(!checkAuth(id))
-            throw new NotAuthorizedException(USER_NOT_AUTH);
+        try {
+            checkCookieUser(session, id);
+        } catch (Exception e) {
+            List<String> error = new ArrayList<String>();
+            error.add(e.getMessage());
+            return error;
+        }
 
         List<String> openAuctions = new ArrayList<>(); 
         
@@ -198,21 +248,20 @@ public class UsersResource {
         return openAuctions;
     }
 
-    /**
-     * We considered as following auctions those which the user did a bid on an auction or
-     * asked a question
-     * 
-     * @param id - id of the user
-     * @return
-     */
     @Path("/{id}/following")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> following(@PathParam("id") String id) {
+    public List<String> following(@CookieParam("scc:session") Cookie session,  @PathParam("id") String id) {
 
-        if(!checkAuth(id))
-            throw new NotAuthorizedException(USER_NOT_AUTH);
+        try {
+            checkCookieUser(session, id);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            List<String> error = new ArrayList<String>();
+            error.add(e.getMessage());
+            return error;
+        }
 
         List<String> winningBidAuctions = new ArrayList<>(); 
         List<String> bidAuctions = new ArrayList<>(); 
@@ -238,6 +287,34 @@ public class UsersResource {
         
         return newList;
     }
+        /**
+    * Throws exception if not appropriate user for operation on Auction
+         * @throws Exception
+    */
+    public String checkCookieUser(Cookie session, String id)
+        throws Exception {
+
+        if (session == null || session.getValue() == null)
+           throw new Exception("No session initialized");
+
+        Session s = null;
+
+        try {
+            s = mapper.readValue(jedis_instance.get("session:" + session.getValue()), Session.class);
+        } catch (JsonMappingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (JsonProcessingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        if (s == null || s.getUserId() == null || s.getUserId().length() == 0)
+            throw new Exception("No valid session initialized");
+        if (!s.getUserId().equals(id))
+            throw new Exception("Invalid user : " + s.getUserId());
+        return s.toString();
+    }
 
     private boolean userExistsInDB(String userId) {
         CosmosPagedIterable<UserDAO> usersIt = db_instance.getUserById(userId);
@@ -260,29 +337,6 @@ public class UsersResource {
         if (!media.verifyImgId(user.getPhotoId()))
             return IMG_NOT_EXIST;
         
-        return null;
-    }
-    
-    public static boolean checkAuth(String userId) {
-        String res = jedis_instance.get("session:" + userId);
-        return res != null;
-    }
-    
-    private String checkLoginUser(Login login) throws IllegalArgumentException, IllegalAccessException{
-        
-        if (login == null)
-            return LOGIN_NULL;
-        
-        // verify that fields are different from null
-        for (Field f : login.getClass().getDeclaredFields()) {
-            f.setAccessible(true);
-            if (f.get(login) == null)
-                return String.format(NULL_FIELD_EXCEPTION, f.getName());
-        }
-        
-        if (!userExistsInDB(login.getId())) 
-            return INVALID_LOGIN;
-            
         return null;
     }
 }

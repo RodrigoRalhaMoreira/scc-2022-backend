@@ -7,18 +7,18 @@ public class RecentAuctionDAO {
     private String _rid;
     private String _ts;
     private String id;
-    private String endTime;
+    private String timeDifference;
     
     public RecentAuctionDAO() {}
     
     public RecentAuctionDAO(RecentAuction ra) {
-        this(ra.getId(), ra.getEndTime());
+        this(ra.getId(), ra.getTimeDifference());
     }
     
-    public RecentAuctionDAO(String id, String endTime) {
+    public RecentAuctionDAO(String id, String timeDifference) {
         super();
         this.id = id;
-        this.endTime = endTime;
+        this.timeDifference = timeDifference;
     }
 
     public String get_rid() {
@@ -41,17 +41,17 @@ public class RecentAuctionDAO {
         return id;
     }
 
-    public String getEndTime() {
-        return endTime;
+    public String getTimeDifference() {
+        return timeDifference;
     }
 
     public RecentAuction toRecentAuction() {
-        return new RecentAuction(id, endTime);
+        return new RecentAuction(id, timeDifference);
     }
 
     @Override
     public String toString() {
-        return "RecentAuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", endTime=" + endTime + "]";
+        return "RecentAuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", timeDifference=" + timeDifference + "]";
     }
 
 }

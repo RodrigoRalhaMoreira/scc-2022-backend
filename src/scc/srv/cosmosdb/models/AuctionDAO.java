@@ -22,7 +22,7 @@ public class AuctionDAO {
     public AuctionDAO() {}
 
     public AuctionDAO(Auction a) {
-        this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getEndTime(), a.getMinPrice(), a.getWinnigBid(), a.getStatus());
+        this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getEndTime(), a.getMinPrice(), a.getWinningBid(), a.getStatus());
     }
 
     public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, Bid winningBid, String status) {
@@ -114,8 +114,8 @@ public class AuctionDAO {
         return winningBid;
     }
 
-    public void setWinnigBid(Bid winnigBid) {
-        this.winningBid = winnigBid;
+    public void setWinnigBid(Bid winningBid) {
+        this.winningBid = winningBid;
     }
 
     public String getStatus() {
@@ -138,6 +138,6 @@ public class AuctionDAO {
         else 
             str = winningBid.toString();
 		return "AuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id= " + id +", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + str +", status="+ status + "]";
+				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winningBid=" + str +", status="+ status + "]";
 	}
 }

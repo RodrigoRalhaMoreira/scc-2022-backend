@@ -1,7 +1,9 @@
 package scc.serverless.main;
 
 import com.microsoft.azure.functions.annotation.*;
+
 import scc.srv.resources.MediaResource;
+
 import com.microsoft.azure.functions.*;
 
 /**
@@ -10,10 +12,7 @@ import com.microsoft.azure.functions.*;
 public class BlobStoreFunction {
 	@FunctionName("blobGeoReplication")
 	public void setLastBlobInfo(
-			@BlobTrigger(name = "blobGeoReplication", 
-			dataType = "binary", 
-			path = "images/{name}", 
-			connection = "BlobStoreConnection") byte[] content,
+			@BlobTrigger(name = "blobGeoReplication", dataType = "binary", path = "images/{name}", connection = "BlobStoreConnection") byte[] content,
 			@BindingName("name") String blobname,
 			final ExecutionContext context) {
 

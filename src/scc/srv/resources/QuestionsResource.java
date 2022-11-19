@@ -1,14 +1,17 @@
 package scc.srv.resources;
 
-import jakarta.ws.rs.*;
-import redis.clients.jedis.Jedis;
-import jakarta.ws.rs.core.MediaType;
 import scc.cache.RedisCache;
+import scc.srv.MainApplication;
 import scc.srv.cosmosdb.CosmosDBLayer;
 import scc.srv.cosmosdb.models.AuctionDAO;
 import scc.srv.cosmosdb.models.QuestionDAO;
 import scc.srv.cosmosdb.models.UserDAO;
+import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.Question;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Cookie;
+import redis.clients.jedis.Jedis;
+import jakarta.ws.rs.core.MediaType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -16,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -25,9 +29,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @Path("/auction/{id}/question")
 public class QuestionsResource {
     
-    // VARIABLES
+    
     private static final String QUESTION_NULL = "Error creating null question";
     private static final String ONLY_OWNER_ERROR = "Only owner can reply to questions";
+    private static final String AUCTION_ERROR = "Auction does not exist";
     private static final String USER_NOT_EXISTS = "Error non-existent user";
     private static final String AUCTION_NOT_EXISTS = "Error non-existent auction";
     private static final String REPLY_ALREADY_DONE = "Only one reply can be made for a question";
@@ -35,11 +40,12 @@ public class QuestionsResource {
     private static final String AUCTION_ID_NOT_EXISTS_DB = "Auction does not exist in the DataBase";
     private static final String SAME_OWNER = "Owner can not ask a question in his auction";
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    private static final int DEFAULT_REDIS_EXPIRE = 600;
 
-    
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
     private ObjectMapper mapper;
+    private UsersResource users;
 
     // Improvements to be made. If we have "id" of auction as PathParam we should
     // not have to pass it as param in POST request.
@@ -48,20 +54,32 @@ public class QuestionsResource {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
+        for(Object resource : MainApplication.getSingletonsSet())  {
+            if(resource instanceof UsersResource)
+                users = (UsersResource) resource;
+        }
     }
 
     /**
      * Creates a new question.
-     * @throws JsonProcessingException 
+     * 
+     * @throws JsonProcessingException
      * @throws IllegalAccessException 
      * @throws IllegalArgumentException 
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(Question question,
+    public String create(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId) throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
 
+        try {
+            users.checkCookieUser(session, question.getUserId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
+        
         String error = checkQuestion(question);
         
         if(error != null)
@@ -72,7 +90,7 @@ public class QuestionsResource {
             
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
-        jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
+        jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
 
         db_instance.putQuestion(dbquestion);
         return dbquestion.getMessage();
@@ -113,11 +131,12 @@ public class QuestionsResource {
         
         return getQuestionById(questionId);
     }
-    
-    // Later improve this to get auctionId of the path
+
     /**
      * Reply to a question.
-     * @throws JsonProcessingException 
+     * 
+     * @throws JsonProcessingException
+     * @throws JsonMappingException
      * @throws IllegalAccessException 
      * @throws IllegalArgumentException 
      */
@@ -125,9 +144,16 @@ public class QuestionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String reply(Question question, @PathParam("id") String auctionId,
-            @PathParam("id") String questionId) throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+    public String reply(@CookieParam("scc:session") Cookie session, Question question,
+            @PathParam("id") String auctionId, @PathParam("id") String questionId) throws JsonMappingException, JsonProcessingException, IllegalArgumentException, IllegalAccessException {
         
+        try {
+            users.checkCookieUser(null, question.getUserId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            return e.getMessage();
+        }
+
         String error = checkQuestion(question);
         
         if(error != null)
@@ -149,8 +175,8 @@ public class QuestionsResource {
             String res = jedis_instance.get("question:" + questioned.getId());
             if(res != null) {
                 questioned.setReply(newReply);
-                jedis_instance.set("question:" + questioned.getId(), mapper.writeValueAsString(questioned));
-                jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
+                jedis_instance.setex("question:" + questioned.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(questioned));
+                jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
             }
         } catch (Exception e) {
             // TODO: handle exception
@@ -165,16 +191,22 @@ public class QuestionsResource {
         db_instance.putQuestion(dbReply);
         return dbReply.getMessage();
     }
- 
     
     // --------------------------------------------------- PRIVATE METHODS ----------------------------------------
     
-    
-    private String getAuctionOwner(String auctionId) {
-        Iterator<AuctionDAO> auctionsIt = db_instance.getAuctionById(auctionId).iterator();
-        while(auctionsIt.hasNext())
-            return auctionsIt.next().getOwnerId();
-        return null;
+
+    private String getAuctionOwner(String auctionId) throws JsonMappingException, JsonProcessingException {
+        String auction_res = jedis_instance.get("auction:" + auctionId);
+        if (auction_res != null) {
+            Auction auction = mapper.readValue(auction_res, Auction.class);
+            return auction.getOwnerId();
+        }
+
+        CosmosPagedIterable<AuctionDAO> auctionsIt = db_instance.getAuctionById(auctionId);
+        if (!auctionsIt.iterator().hasNext())
+            return AUCTION_ERROR; // this should never happen.
+        AuctionDAO auc = auctionsIt.iterator().next();
+        return auc.getOwnerId();
     }
     
     private Question getQuestionById(String id) {
@@ -222,5 +254,5 @@ public class QuestionsResource {
             return AUCTION_NOT_EXISTS;
         
         return null;
-    }
+    } 
 }

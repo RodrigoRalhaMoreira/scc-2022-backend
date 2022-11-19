@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 
 public class Question {
+    
     @JsonProperty("id")
     private String id;
     @JsonProperty("auctionId")
