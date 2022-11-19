@@ -19,6 +19,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.Cookie;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import scc.srv.dataclasses.Bid;
 
