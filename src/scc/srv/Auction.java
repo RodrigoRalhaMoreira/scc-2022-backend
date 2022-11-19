@@ -22,7 +22,7 @@ public class Auction {
     @JsonProperty("ownerId")
     private String ownerId;
     @JsonProperty("endTime")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DDThh:mm:ss.fffffffZ")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DD'T'HH:MM:SS:MS")
     private Date endTime;
     @JsonProperty("minPrice")
     private int minPrice;
