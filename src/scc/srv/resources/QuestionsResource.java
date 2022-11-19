@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @Path("/auction/{id}/question")
 public class QuestionsResource {
     
+    // VARIABLES
     private static final String QUESTION_NULL = "Error creating null question";
     private static final String ONLY_OWNER_ERROR = "Only owner can reply to questions";
     private static final String USER_NOT_EXISTS = "Error non-existent user";
@@ -33,10 +34,9 @@ public class QuestionsResource {
     private static final String ALREADY_EXISTS_DB = "Id already exists in the DataBase";
     private static final String AUCTION_ID_NOT_EXISTS_DB = "Auction does not exist in the DataBase";
     private static final String SAME_OWNER = "Owner can not ask a question in his auction";
-    private static final String FILL_IN_INCORRECTLY = "Please fill in the parameters and url in the right way";
-    
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
 
+    
     private static CosmosDBLayer db_instance;
     private static Jedis jedis_instance;
     private ObjectMapper mapper;
@@ -66,9 +66,6 @@ public class QuestionsResource {
         
         if(error != null)
             return error;
-        
-        if(!auctionId.equals(question.getAuctionId()))
-            return FILL_IN_INCORRECTLY;
 
         if(getAuctionOwner(auctionId).equals(question.getUserId()))
             return SAME_OWNER;
@@ -135,9 +132,6 @@ public class QuestionsResource {
         
         if(error != null)
             return null;
-        
-        if(!auctionId.equals(question.getAuctionId()))
-            return FILL_IN_INCORRECTLY;
 
         if (!question.getUserId().equals(getAuctionOwner(auctionId))) // question.getAuctionId()
             return ONLY_OWNER_ERROR;
@@ -171,8 +165,7 @@ public class QuestionsResource {
         db_instance.putQuestion(dbReply);
         return dbReply.getMessage();
     }
-
-    
+ 
     
     // --------------------------------------------------- PRIVATE METHODS ----------------------------------------
     
@@ -223,7 +216,7 @@ public class QuestionsResource {
         
         if (!userExistsInDB(question.getUserId()))
             return USER_NOT_EXISTS;
-
+        
         // this does not make sense we're only doing this for the moment
         if (!auctionExistsInDB(question.getAuctionId()))
             return AUCTION_NOT_EXISTS;

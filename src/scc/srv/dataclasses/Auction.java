@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Represents an Auction
  */
-
 public class Auction {
 
     @JsonProperty("id")
@@ -22,7 +21,7 @@ public class Auction {
     @JsonProperty("ownerId")
     private String ownerId;
     @JsonProperty("endTime")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DDThh:mm:ss.fffffffZ")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DD'T'HH:MM:SS:MS") // YYYY-MM-DDThh:mm:ss.fffffffZ
     private Date endTime;
     @JsonProperty("minPrice")
     private int minPrice;
