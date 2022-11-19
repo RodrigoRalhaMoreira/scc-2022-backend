@@ -48,13 +48,13 @@ public class CosmosDBLayer {
 
 	}
 
-	private CosmosClient client;
 	private CosmosDatabase db;
-	private CosmosContainer users;
-	private CosmosContainer questions;
-	private CosmosContainer auctions;
+	private CosmosClient client;
 	private CosmosContainer bids;
 	private CosmosContainer login;
+	private CosmosContainer users;
+	private CosmosContainer auctions;
+	private CosmosContainer questions;
 	private CosmosContainer popularAuctions;
 	private CosmosContainer recentAuctions;
 
@@ -239,7 +239,7 @@ public class CosmosDBLayer {
 				RecentAuctionDAO.class);
 	}
 
-	public CosmosPagedIterable<AuctionDAO> getCloseAuctions() {
+	public void closeAuctions() {
 		init();
 		CosmosPagedIterable<AuctionDAO> cpi = auctions.queryItems(
 				"SELECT * FROM auctions WHERE auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\""
@@ -252,14 +252,14 @@ public class CosmosDBLayer {
 			auction.setStatus(AuctionStatus.CLOSE.getStatus());
 			auctions.upsertItem(auction);
 		}
-		return cpi;
 	}
 
-    public CosmosPagedIterable<AuctionDAO> getAuctionsAboutToClose() {
-        init();
-		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\""
+	public CosmosPagedIterable<AuctionDAO> getAuctionsAboutToClose() {
+		init();
+		return auctions.queryItems(
+				"SELECT * FROM auctions WHERE auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\""
 						+ "AND auctions.endTime <= (GetCurrentTimestamp() + 86400)",
 				new CosmosQueryRequestOptions(),
 				AuctionDAO.class);
-    }
+	}
 }

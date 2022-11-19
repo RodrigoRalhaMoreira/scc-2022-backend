@@ -10,23 +10,22 @@ import scc.srv.MainApplication;
 import scc.srv.dataclasses.Login;
 import scc.srv.dataclasses.Session;
 import scc.srv.dataclasses.User;
-import jakarta.ws.rs.*;
-import redis.clients.jedis.Jedis;
-import jakarta.ws.rs.core.Cookie;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.NewCookie;
-import jakarta.ws.rs.core.Response;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
-
+import java.util.List;
+import jakarta.ws.rs.*;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.lang.reflect.Field;
+import jakarta.ws.rs.core.Cookie;
+import redis.clients.jedis.Jedis;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.MediaType;
 import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Resource for managing users.
@@ -34,20 +33,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Path("/user")
 public class UsersResource {
 
-    private static final String USER_NULL = "Error creating null user";
+    private static final int DEFAULT_REDIS_EXPIRE = 600;
+    private static final String NOT_AUTH = "User not auth";
     private static final String IMG_NOT_EXIST = "Image does not exist";
+    private static final String USER_NULL = "Error creating null user";
+    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    private static final String USER_ALREADY_EXISTS = "UserId already exists";
+    private static final String INVALID_LOGIN = "UserId or password incorrect";
     private static final String UPDATE_ERROR = "Error updating non-existent user";
     private static final String DELETE_ERROR = "Error deleting non-existent user";
-    private static final String INVALID_LOGIN = "UserId or password incorrect";
-    private static final String USER_ALREADY_EXISTS = "UserId already exists";
-    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
-    private static final int DEFAULT_REDIS_EXPIRE = 600;
 
-    private static CosmosDBLayer db_instance;
-    private static Jedis jedis_instance;
     private ObjectMapper mapper;
-
     private MediaResource media;
+    private static Jedis jedis_instance;
+    private static CosmosDBLayer db_instance;
 
     public UsersResource() {
         db_instance = CosmosDBLayer.getInstance();
@@ -161,8 +160,6 @@ public class UsersResource {
         return removed > 0 ? id : DELETE_ERROR;
     }
 
-    // not sure if we want this information cached (map with string(UserId) ->
-    // set<Auctions>)
     @Path("/{id}/auctions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -271,19 +268,17 @@ public class UsersResource {
         List<String> bidAuctions = new ArrayList<>();
         List<String> questionsAuctions = new ArrayList<>();
 
-        Iterator<AuctionDAO> itwb = db_instance.getAuctionUserFollow(id).iterator(); // getAuctionUserFollow(id)
+        Iterator<AuctionDAO> itwb = db_instance.getAuctionUserFollow(id).iterator();
         while (itwb.hasNext())
-            winningBidAuctions.add("  Winning Bidded Auction Id: " + itwb.next().getWinnigBid().getAuctionId()); // .toBid().toString());
+            winningBidAuctions.add("  Winning Bidded Auction Id: " + itwb.next().getWinnigBid().getAuctionId());
 
-        Iterator<BidDAO> itb = db_instance.getBidsByUserId(id).iterator(); // getAuctionUserFollow(id)
+        Iterator<BidDAO> itb = db_instance.getBidsByUserId(id).iterator();
         while (itb.hasNext())
-            bidAuctions.add("  Bidded Auction Id: " + itb.next().getAuctionId()); // .toBid().toString());
+            bidAuctions.add("  Bidded Auction Id: " + itb.next().getAuctionId());
 
-        Iterator<QuestionDAO> itq = db_instance.getQuestionsByUserId(id).iterator(); // getAuctionUserFollow(id)
+        Iterator<QuestionDAO> itq = db_instance.getQuestionsByUserId(id).iterator();
         while (itq.hasNext())
-            questionsAuctions.add("  Questioned Auction Id: " + itq.next().getAuctionId()); // itq.next().getAuctionId());
-                                                                                            // //
-                                                                                            // .toQuestion().toString());
+            questionsAuctions.add("  Questioned Auction Id: " + itq.next().getAuctionId());
 
         List<String> newList = new ArrayList<>();
 
@@ -306,16 +301,10 @@ public class UsersResource {
             throw new Exception("No session initialized");
 
         Session s = null;
-
-        try {
-            s = mapper.readValue(jedis_instance.get("session:" + session.getValue()), Session.class);
-        } catch (JsonMappingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        String session_res = jedis_instance.get("session:" + session.getValue());
+        if (session_res == null)
+            return NOT_AUTH;
+        s = mapper.readValue(session_res, Session.class);
 
         if (s == null || s.getUserId() == null || s.getUserId().length() == 0)
             throw new Exception("No valid session initialized");

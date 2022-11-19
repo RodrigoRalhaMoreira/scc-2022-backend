@@ -1,23 +1,22 @@
 package scc.srv.resources;
 
 import scc.cache.RedisCache;
-import scc.cosmosdb.CosmosDBLayer;
-import scc.cosmosdb.models.AuctionDAO;
-import scc.cosmosdb.models.QuestionDAO;
-import scc.cosmosdb.models.UserDAO;
 import scc.srv.MainApplication;
+import scc.cosmosdb.CosmosDBLayer;
+import scc.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.Question;
+import scc.cosmosdb.models.AuctionDAO;
+import scc.cosmosdb.models.QuestionDAO;
+
+import java.util.List;
 import jakarta.ws.rs.*;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.lang.reflect.Field;
 import jakarta.ws.rs.core.Cookie;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,25 +28,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @Path("/auction/{id}/question")
 public class QuestionsResource {
 
-    private static final String QUESTION_NULL = "Error creating null question";
-    private static final String ONLY_OWNER_ERROR = "Only owner can reply to questions";
-    private static final String AUCTION_ERROR = "Auction does not exist";
-    private static final String USER_NOT_EXISTS = "Error non-existent user";
-    private static final String AUCTION_NOT_EXISTS = "Error non-existent auction";
-    private static final String REPLY_ALREADY_DONE = "Only one reply can be made for a question";
-    private static final String ALREADY_EXISTS_DB = "Id already exists in the DataBase";
-    private static final String AUCTION_ID_NOT_EXISTS_DB = "Auction does not exist in the DataBase";
-    private static final String SAME_OWNER = "Owner can not ask a question in his auction";
-    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
     private static final int DEFAULT_REDIS_EXPIRE = 600;
+    private static final String AUCTION_ERROR = "Auction does not exist";
+    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    private static final String USER_NOT_EXISTS = "Error non-existent user";
+    private static final String QUESTION_NULL = "Error creating null question";
+    private static final String AUCTION_NOT_EXISTS = "Error non-existent auction";
+    private static final String ONLY_OWNER_ERROR = "Only owner can reply to questions";
+    private static final String ALREADY_EXISTS_DB = "Id already exists in the DataBase";
+    private static final String SAME_OWNER = "Owner can not ask a question in his auction";
+    private static final String REPLY_ALREADY_DONE = "Only one reply can be made for a question";
+    private static final String AUCTION_ID_NOT_EXISTS_DB = "Auction does not exist in the DataBase";
 
-    private static CosmosDBLayer db_instance;
-    private static Jedis jedis_instance;
     private ObjectMapper mapper;
     private UsersResource users;
-
-    // Improvements to be made. If we have "id" of auction as PathParam we should
-    // not have to pass it as param in POST request.
+    private static Jedis jedis_instance;
+    private static CosmosDBLayer db_instance;
 
     public QuestionsResource() {
         db_instance = CosmosDBLayer.getInstance();
@@ -161,7 +157,7 @@ public class QuestionsResource {
         if (error != null)
             return null;
 
-        if (!question.getUserId().equals(getAuctionOwner(auctionId))) // question.getAuctionId()
+        if (!question.getUserId().equals(getAuctionOwner(auctionId)))
             return ONLY_OWNER_ERROR;
 
         Question questioned = getQuestionById(questionId);
@@ -198,8 +194,7 @@ public class QuestionsResource {
         return dbReply.getMessage();
     }
 
-    // --------------------------------------------------- PRIVATE METHODS
-    // ----------------------------------------
+    // PRIVATE METHODS
 
     private String getAuctionOwner(String auctionId) throws JsonMappingException, JsonProcessingException {
         String auction_res = jedis_instance.get("auction:" + auctionId);
