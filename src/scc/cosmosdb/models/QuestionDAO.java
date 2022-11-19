@@ -1,4 +1,4 @@
-package scc.srv.cosmosdb.models;
+package scc.cosmosdb.models;
 
 import scc.srv.dataclasses.Question;
 
@@ -6,7 +6,7 @@ import scc.srv.dataclasses.Question;
  * Represents a Question, as stored in the database
  */
 public class QuestionDAO {
-    
+
     private String _rid;
     private String _ts;
     private String id;
@@ -62,11 +62,11 @@ public class QuestionDAO {
     public String getMessage() {
         return message;
     }
-    
+
     public String getReply() {
         return reply;
     }
-    
+
     public void setReply(String reply) {
         this.reply = reply;
     }

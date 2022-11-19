@@ -1,11 +1,11 @@
 package scc.srv.resources;
 
 import scc.cache.RedisCache;
+import scc.cosmosdb.CosmosDBLayer;
+import scc.cosmosdb.models.AuctionDAO;
+import scc.cosmosdb.models.PopularAuctionDAO;
+import scc.cosmosdb.models.RecentAuctionDAO;
 import scc.srv.MainApplication;
-import scc.srv.cosmosdb.CosmosDBLayer;
-import scc.srv.cosmosdb.models.AuctionDAO;
-import scc.srv.cosmosdb.models.PopularAuctionDAO;
-import scc.srv.cosmosdb.models.RecentAuctionDAO;
 import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.AuctionStatus;
 import jakarta.ws.rs.*;
@@ -45,22 +45,19 @@ public class AuctionsResource {
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
     private static final int DEFAULT_REDIS_EXPIRE = 600;
-    
-    
-
 
     public AuctionsResource() {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
-        
-        for(Object resource : MainApplication.getSingletonsSet())  {
-            if(resource instanceof MediaResource)
+
+        for (Object resource : MainApplication.getSingletonsSet()) {
+            if (resource instanceof MediaResource)
                 media = (MediaResource) resource;
-            if(resource instanceof UsersResource)
+            if (resource instanceof UsersResource)
                 users = (UsersResource) resource;
-        }       
-    } 
+        }
+    }
 
     /**
      * 
@@ -71,8 +68,9 @@ public class AuctionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Auction auction) throws IllegalArgumentException, IllegalAccessException {
-        
+    public String create(@CookieParam("scc:session") Cookie session, Auction auction)
+            throws IllegalArgumentException, IllegalAccessException {
+
         // Winning bids start by default with the value of null
         try {
             users.checkCookieUser(session, auction.getOwnerId());
@@ -80,23 +78,24 @@ public class AuctionsResource {
             // TODO Auto-generated catch block
             return e.getMessage();
         }
-        
+
         String result = checkAuction(auction);
-        
-        if(result != null)
+
+        if (result != null)
             return result;
-        
+
         String res = jedis_instance.get("auction:" + auction.getId());
         if (res != null)
             return AUCTION_ALREADY_EXISTS;
-         
+
         // Status special verification when creating an auction
-        if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) 
-            result = INVALID_STATUS; 
-        
+        if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
+            result = INVALID_STATUS;
+
         // Create the user to store in the database and cache
         try {
-            jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(auction));
+            jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE,
+                    mapper.writeValueAsString(auction));
         } catch (Exception e) {
             // TODO: handle exception
         }
@@ -116,45 +115,47 @@ public class AuctionsResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String update(@CookieParam("scc:session") Cookie session, Auction auction) throws IllegalArgumentException, IllegalAccessException {
-        
+    public String update(@CookieParam("scc:session") Cookie session, Auction auction)
+            throws IllegalArgumentException, IllegalAccessException {
+
         try {
             users.checkCookieUser(session, auction.getOwnerId());
         } catch (Exception e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        
+
         String error = checkAuction(auction);
-        
-        if(error != null)
+
+        if (error != null)
             return error;
-        
+
         // Actual status
         String currentStatus = getStatusAuction(auction.getId());
         int currentStatusValue = getStatusValue(currentStatus); // Value
-        
+
         // New Status
         String newStatus = auction.getStatus(); // or dbAuction --> works as well
         int newStatusValue = getStatusValue(newStatus); // Value
-        
+
         // Status special verification when updating an auction
-        if(!isValidStatus(auction.getStatus()) || currentStatusValue > newStatusValue)
+        if (!isValidStatus(auction.getStatus()) || currentStatusValue > newStatusValue)
             return INVALID_STATUS;
-        
+
         // Checks if auctionId exists
-        if (!db_instance.getAuctionById(auction.getId()).iterator().hasNext()) 
+        if (!db_instance.getAuctionById(auction.getId()).iterator().hasNext())
             return AUCTION_NOT_EXIST;
 
         try {
             String res = jedis_instance.get("auction:" + auction.getId());
             if (res != null) {
-                jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(auction));
+                jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE,
+                        mapper.writeValueAsString(auction));
             }
         } catch (Exception e) {
             // TODO: handle exception
         }
-        
+
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.updateAuction(dbAuction);
         return dbAuction.getId();
@@ -173,10 +174,11 @@ public class AuctionsResource {
             return ((((AuctionDAO) it.next()).toAuction()).toString());
         return null;
     }
-    
+
     /**
      * The most popular auctions are those which have more bids submitted to it
      * The auctions are ordered by number of bids submitted
+     * 
      * @param id
      * @return
      */
@@ -186,63 +188,64 @@ public class AuctionsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> popularAuctionsList() {
         // AUTH ?
-        
+
         List<String> list = new ArrayList<>();
-        
+
         Iterator<PopularAuctionDAO> it = db_instance.getPopularAuctions().iterator();
-        if (it.hasNext()) 
+        if (it.hasNext())
             list.add(((PopularAuctionDAO) it.next()).toPopularAuction().toString());
-        
+
         return list;
     }
-    
+
     @Path("/any/recent")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> openAuctionsUserList() {
-        // AUTH ?? 
-        
+        // AUTH ??
+
         List<String> list = new ArrayList<>();
-        
+
         Iterator<RecentAuctionDAO> it = db_instance.getRecentAuctions().iterator();
-        if (it.hasNext()) 
+        if (it.hasNext())
             list.add(((RecentAuctionDAO) it.next()).toRecentAuction().toString());
-        
+
         return list;
     }
-    
-    // -----------------------------------------------------  PRIVATE METHODS ---------------------------------------------
+
+    // ----------------------------------------------------- PRIVATE METHODS
+    // ---------------------------------------------
 
     private boolean isValidStatus(String status) {
         return ((status.equals(AuctionStatus.OPEN.getStatus()) ||
                 status.equals(AuctionStatus.CLOSE.getStatus()) ||
                 status.equals(AuctionStatus.DELETED.getStatus())) ? true : false);
     }
-    
+
     private int getStatusValue(String status) {
-        
-        for(AuctionStatus auctionStatus : AuctionStatus.values())
-            if(status.equals(auctionStatus.getStatus()))
+
+        for (AuctionStatus auctionStatus : AuctionStatus.values())
+            if (status.equals(auctionStatus.getStatus()))
                 return auctionStatus.getValue();
-        
+
         return -1;
     }
-    
+
     public Bid getAuctionWinningBid(String id) {
         Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
         if (it.hasNext())
             return ((((AuctionDAO) it.next()).toAuction().getWinningBid()));
         return null;
     }
-    
+
     private String getStatusAuction(String id) {
         Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
         if (it.hasNext())
             return ((((AuctionDAO) it.next()).toAuction().getStatus()));
         return null;
     }
-    
+
     public Auction getAuctionById(String id) {
         Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
         if (it.hasNext())
@@ -271,7 +274,7 @@ public class AuctionsResource {
         // verify if imgId exists in the database
         if (!media.verifyImgId(auction.getImgId()))
             return IMG_NOT_EXIST;
-        
+
         return null;
     }
 }

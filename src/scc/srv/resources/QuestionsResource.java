@@ -1,11 +1,11 @@
 package scc.srv.resources;
 
 import scc.cache.RedisCache;
+import scc.cosmosdb.CosmosDBLayer;
+import scc.cosmosdb.models.AuctionDAO;
+import scc.cosmosdb.models.QuestionDAO;
+import scc.cosmosdb.models.UserDAO;
 import scc.srv.MainApplication;
-import scc.srv.cosmosdb.CosmosDBLayer;
-import scc.srv.cosmosdb.models.AuctionDAO;
-import scc.srv.cosmosdb.models.QuestionDAO;
-import scc.srv.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.Question;
 import jakarta.ws.rs.*;
@@ -28,8 +28,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  */
 @Path("/auction/{id}/question")
 public class QuestionsResource {
-    
-    
+
     private static final String QUESTION_NULL = "Error creating null question";
     private static final String ONLY_OWNER_ERROR = "Only owner can reply to questions";
     private static final String AUCTION_ERROR = "Auction does not exist";
@@ -54,8 +53,8 @@ public class QuestionsResource {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
-        for(Object resource : MainApplication.getSingletonsSet())  {
-            if(resource instanceof UsersResource)
+        for (Object resource : MainApplication.getSingletonsSet()) {
+            if (resource instanceof UsersResource)
                 users = (UsersResource) resource;
         }
     }
@@ -64,14 +63,15 @@ public class QuestionsResource {
      * Creates a new question.
      * 
      * @throws JsonProcessingException
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(@CookieParam("scc:session") Cookie session, Question question,
-            @PathParam("id") String auctionId) throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+            @PathParam("id") String auctionId)
+            throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
 
         try {
             users.checkCookieUser(session, question.getUserId());
@@ -79,15 +79,15 @@ public class QuestionsResource {
             // TODO Auto-generated catch block
             return e.getMessage();
         }
-        
+
         String error = checkQuestion(question);
-        
-        if(error != null)
+
+        if (error != null)
             return error;
 
-        if(getAuctionOwner(auctionId).equals(question.getUserId()))
+        if (getAuctionOwner(auctionId).equals(question.getUserId()))
             return SAME_OWNER;
-            
+
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
         jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
@@ -95,40 +95,41 @@ public class QuestionsResource {
         db_instance.putQuestion(dbquestion);
         return dbquestion.getMessage();
     }
-    
+
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> listAuctionQuestions(@PathParam("id") String auctionId) throws IllegalArgumentException, IllegalAccessException {
-        
+    public List<String> listAuctionQuestions(@PathParam("id") String auctionId)
+            throws IllegalArgumentException, IllegalAccessException {
+
         List<String> list = new ArrayList<>();
-        
-        if(!auctionExistsInDB(auctionId)) {
+
+        if (!auctionExistsInDB(auctionId)) {
             list.add(AUCTION_ID_NOT_EXISTS_DB);
             return list;
         }
-        
+
         Iterator<QuestionDAO> it = db_instance.getQuestionsByAuctionId(auctionId).iterator();
-        
+
         if (it.hasNext())
             list.add(((QuestionDAO) it.next()).toQuestion().toString());
-        
+
         return list;
     }
-    
+
     @Path("/{id}")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Question listAuctionQuestion(@PathParam("id") String auctionId, 
+    public Question listAuctionQuestion(@PathParam("id") String auctionId,
             @PathParam("id") String questionId) throws IllegalArgumentException, IllegalAccessException {
-        
-        if(!auctionExistsInDB(auctionId)) 
+
+        if (!auctionExistsInDB(auctionId))
             return null;
-        
-        if(!questionExistsInDB(questionId))
+
+        if (!questionExistsInDB(questionId))
             return null;
-        
+
         return getQuestionById(questionId);
     }
 
@@ -137,16 +138,17 @@ public class QuestionsResource {
      * 
      * @throws JsonProcessingException
      * @throws JsonMappingException
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
      */
     @Path("/{id}/reply")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String reply(@CookieParam("scc:session") Cookie session, Question question,
-            @PathParam("id") String auctionId, @PathParam("id") String questionId) throws JsonMappingException, JsonProcessingException, IllegalArgumentException, IllegalAccessException {
-        
+            @PathParam("id") String auctionId, @PathParam("id") String questionId)
+            throws JsonMappingException, JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+
         try {
             users.checkCookieUser(null, question.getUserId());
         } catch (Exception e) {
@@ -155,45 +157,49 @@ public class QuestionsResource {
         }
 
         String error = checkQuestion(question);
-        
-        if(error != null)
+
+        if (error != null)
             return null;
 
         if (!question.getUserId().equals(getAuctionOwner(auctionId))) // question.getAuctionId()
             return ONLY_OWNER_ERROR;
-        
+
         Question questioned = getQuestionById(questionId);
-        
+
         String reply = questioned.getReply();
         String newReply = question.getMessage();
-        
-        if(reply != null)
+
+        if (reply != null)
             return REPLY_ALREADY_DONE;
-        
-        // Updates the question in redis with the new reply and stores the new question (reply)
+
+        // Updates the question in redis with the new reply and stores the new question
+        // (reply)
         try {
             String res = jedis_instance.get("question:" + questioned.getId());
-            if(res != null) {
+            if (res != null) {
                 questioned.setReply(newReply);
-                jedis_instance.setex("question:" + questioned.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(questioned));
-                jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
+                jedis_instance.setex("question:" + questioned.getId(), DEFAULT_REDIS_EXPIRE,
+                        mapper.writeValueAsString(questioned));
+                jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE,
+                        mapper.writeValueAsString(question));
             }
         } catch (Exception e) {
             // TODO: handle exception
         }
-        
-        // Updates the question in the database with the new reply and stores the new question (reply)
+
+        // Updates the question in the database with the new reply and stores the new
+        // question (reply)
         QuestionDAO dbQuestion = new QuestionDAO(questioned);
         dbQuestion.setReply(newReply);
         db_instance.updateQuestion(dbQuestion);
-        
+
         QuestionDAO dbReply = new QuestionDAO(question);
         db_instance.putQuestion(dbReply);
         return dbReply.getMessage();
     }
-    
-    // --------------------------------------------------- PRIVATE METHODS ----------------------------------------
-    
+
+    // --------------------------------------------------- PRIVATE METHODS
+    // ----------------------------------------
 
     private String getAuctionOwner(String auctionId) throws JsonMappingException, JsonProcessingException {
         String auction_res = jedis_instance.get("auction:" + auctionId);
@@ -208,14 +214,14 @@ public class QuestionsResource {
         AuctionDAO auc = auctionsIt.iterator().next();
         return auc.getOwnerId();
     }
-    
+
     private Question getQuestionById(String id) {
         Iterator<QuestionDAO> auctionsIt = db_instance.getQuestionsById(id).iterator();
-        while(auctionsIt.hasNext())
+        while (auctionsIt.hasNext())
             return auctionsIt.next().toQuestion();
         return null;
     }
-    
+
     private boolean questionExistsInDB(String questionId) {
         CosmosPagedIterable<QuestionDAO> questionsIt = db_instance.getQuestionsById(questionId);
         return questionsIt.iterator().hasNext();
@@ -230,29 +236,29 @@ public class QuestionsResource {
         CosmosPagedIterable<AuctionDAO> auctionIt = db_instance.getAuctionById(auctionId);
         return auctionIt.iterator().hasNext();
     }
-    
-    private String checkQuestion(Question question) throws IllegalArgumentException, IllegalAccessException{
-        
+
+    private String checkQuestion(Question question) throws IllegalArgumentException, IllegalAccessException {
+
         if (question == null)
             return QUESTION_NULL;
-        
-        if(questionExistsInDB(question.getId()))
+
+        if (questionExistsInDB(question.getId()))
             return ALREADY_EXISTS_DB;
-        
+
         // verify that fields are different from null
         for (Field f : question.getClass().getDeclaredFields()) {
             f.setAccessible(true);
             if (f.get(question) == null && !f.getName().equals("reply"))
                 return String.format(NULL_FIELD_EXCEPTION, f.getName());
         }
-        
+
         if (!userExistsInDB(question.getUserId()))
             return USER_NOT_EXISTS;
-        
+
         // this does not make sense we're only doing this for the moment
         if (!auctionExistsInDB(question.getAuctionId()))
             return AUCTION_NOT_EXISTS;
-        
+
         return null;
-    } 
+    }
 }

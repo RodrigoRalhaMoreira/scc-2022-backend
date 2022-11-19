@@ -1,11 +1,11 @@
 package scc.srv.resources;
 
 import scc.cache.RedisCache;
+import scc.cosmosdb.CosmosDBLayer;
+import scc.cosmosdb.models.AuctionDAO;
+import scc.cosmosdb.models.BidDAO;
+import scc.cosmosdb.models.UserDAO;
 import scc.srv.MainApplication;
-import scc.srv.cosmosdb.CosmosDBLayer;
-import scc.srv.cosmosdb.models.AuctionDAO;
-import scc.srv.cosmosdb.models.BidDAO;
-import scc.srv.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.AuctionStatus;
 import scc.srv.dataclasses.Bid;
@@ -53,8 +53,8 @@ public class BidResource {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
         mapper = new ObjectMapper();
-        for(Object resource : MainApplication.getSingletonsSet())  {
-            if(resource instanceof UsersResource)
+        for (Object resource : MainApplication.getSingletonsSet()) {
+            if (resource instanceof UsersResource)
                 users = (UsersResource) resource;
         }
     }
@@ -63,14 +63,15 @@ public class BidResource {
      * Creates a new bid.
      * 
      * @throws JsonProcessingException
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException 
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Bid bid) throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
-        
+    public String create(@CookieParam("scc:session") Cookie session, Bid bid)
+            throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+
         /**
          * TODO
          * REALLY IMPORTANT -->>> ACTUAL BID HAS TO BE GREATER THAT THE WINNING BID AT
@@ -78,31 +79,31 @@ public class BidResource {
          * IF WINNING BID IS CURRENTLY NULL (-> WINNING BID = BID.GETVALUE())
          */
 
-         try {
+        try {
             users.checkCookieUser(session, bid.getUserId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
             return e.getMessage();
         }
-        
+
         String result = checkBid(bid);
-        
-        if(result != null)
+
+        if (result != null)
             return result;
-        
+
         String res = jedis_instance.get("auction:" + bid.getAuctionId());
-        Auction redis_auction = mapper.readValue(res, Auction.class); //Auction
-        
+        Auction redis_auction = mapper.readValue(res, Auction.class); // Auction
+
         Bid auctionWinningBid = redis_auction.getWinningBid();
         String auctionOwnerId = redis_auction.getOwnerId();
         String auctionStatus = redis_auction.getStatus();
-        int auctionMinPrice = redis_auction.getMinPrice(); 
-        
+        int auctionMinPrice = redis_auction.getMinPrice();
+
         // bid value has to be higher than current winning bid for that auction
         if(auctionWinningBid != null && auctionWinningBid.getAmount() >= bid.getAmount())
             return LOWER_BIDVALUE;
-        
-        if(auctionOwnerId.equals(bid.getUserId()))
+
+        if (auctionOwnerId.equals(bid.getUserId()))
             return SAME_OWNER;
         
         if(!auctionStatus.equals(AuctionStatus.OPEN.getStatus()))
@@ -111,14 +112,15 @@ public class BidResource {
         if(bid.getAmount() < auctionMinPrice)
             return LOWER_THAN_MIN_VALUE;
 
-        jedis_instance.setex("auction:" + redis_auction.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(redis_auction));
-        jedis_instance.setex("bid:" + bid.getId(), DEFAULT_REDIS_EXPIRE,mapper.writeValueAsString(bid));
+        jedis_instance.setex("auction:" + redis_auction.getId(), DEFAULT_REDIS_EXPIRE,
+                mapper.writeValueAsString(redis_auction));
+        jedis_instance.setex("bid:" + bid.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(bid));
 
         // Updates the auction in the database
         AuctionDAO dbAuction = new AuctionDAO(redis_auction);
         dbAuction.setWinnigBid(bid);
         db_instance.updateAuction(dbAuction);
-        
+
         // Create the bid to store in the database
         BidDAO dbbid = new BidDAO(bid);
         db_instance.putBid(dbbid);
@@ -134,7 +136,7 @@ public class BidResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> list(@PathParam("id") String id) {
-        
+
         List<String> bids = new ArrayList<>();
 
         // this does not make sense we're only doing this for the moment
@@ -142,14 +144,15 @@ public class BidResource {
             return bids;
 
         Iterator<BidDAO> bidsIt = db_instance.getBidsByAuctionId(id).iterator();
-        
-        while (bidsIt.hasNext()) 
+
+        while (bidsIt.hasNext())
             bids.add(bidsIt.next().toBid().toString());
-        
+
         return bids;
     }
 
-    // --------------------------------------------------------- PRIVATE METHODS ------------------------------------
+    // --------------------------------------------------------- PRIVATE METHODS
+    // ------------------------------------
 
     private boolean userExistsInDB(String userId) {
         CosmosPagedIterable<UserDAO> usersIt = db_instance.getUserById(userId);
@@ -160,38 +163,39 @@ public class BidResource {
         CosmosPagedIterable<AuctionDAO> auctionIt = db_instance.getAuctionById(auctionId);
         return auctionIt.iterator().hasNext();
     }
-    
+
     /**
-    private boolean userExistsInRedis(String userId) {
-        String res = jedis_instance.get("user:" + userId);
-        
-        try {
-            User redis_user = mapper.readValue(res, User.class);
-            return redis_user != null;
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } 
-        return false;
-    }
-    
-    
-    private boolean auctionExistsInRedis(String auctionId) {
-        String res = jedis_instance.get("auction:" + auctionId);
-        
-        try {
-            Auction redis_auction = mapper.readValue(res, Auction.class);
-            return redis_auction != null;
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } 
-        return false;
-    } 
-    
-    
-     * @throws IllegalAccessException 
-     * @throws IllegalArgumentException **/
+     * private boolean userExistsInRedis(String userId) {
+     * String res = jedis_instance.get("user:" + userId);
+     * 
+     * try {
+     * User redis_user = mapper.readValue(res, User.class);
+     * return redis_user != null;
+     * } catch (JsonProcessingException e) {
+     * // TODO Auto-generated catch block
+     * e.printStackTrace();
+     * }
+     * return false;
+     * }
+     * 
+     * 
+     * private boolean auctionExistsInRedis(String auctionId) {
+     * String res = jedis_instance.get("auction:" + auctionId);
+     * 
+     * try {
+     * Auction redis_auction = mapper.readValue(res, Auction.class);
+     * return redis_auction != null;
+     * } catch (JsonProcessingException e) {
+     * // TODO Auto-generated catch block
+     * e.printStackTrace();
+     * }
+     * return false;
+     * }
+     * 
+     * 
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     **/
 
     private String checkBid(Bid bid) throws IllegalArgumentException, IllegalAccessException {
 

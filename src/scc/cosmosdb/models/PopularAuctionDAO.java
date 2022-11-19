@@ -1,20 +1,21 @@
-package scc.srv.cosmosdb.models;
+package scc.cosmosdb.models;
 
 import scc.srv.dataclasses.PopularAuction;
 
 public class PopularAuctionDAO {
-    
+
     private String _rid;
     private String _ts;
     private String id;
     private int count;
-    
-    public PopularAuctionDAO() {}
-    
+
+    public PopularAuctionDAO() {
+    }
+
     public PopularAuctionDAO(PopularAuction pa) {
         this(pa.getId(), pa.getCount());
     }
-    
+
     public PopularAuctionDAO(String id, int count) {
         super();
         this.id = id;

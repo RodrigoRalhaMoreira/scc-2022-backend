@@ -1,42 +1,42 @@
-package scc.srv.cosmosdb.models;
+package scc.cosmosdb.models;
 
 import scc.srv.dataclasses.Login;
 
 public class LoginDAO {
 
     private String _rid;
-	private String _ts;
+    private String _ts;
     private String id;
     private String pwd;
 
-    public LoginDAO() {}
+    public LoginDAO() {
+    }
 
     public LoginDAO(Login l) {
         this(l.getId(), l.getPwd());
     }
-    
+
     public LoginDAO(String id, String pwd) {
         super();
         this.id = id;
-        this.pwd = pwd; 
+        this.pwd = pwd;
     }
 
     public String get_rid() {
-		return _rid;
-	}
+        return _rid;
+    }
 
-	public void set_rid(String _rid) {
-		this._rid = _rid;
-	}
+    public void set_rid(String _rid) {
+        this._rid = _rid;
+    }
 
-	public String get_ts() {
-		return _ts;
-	}
+    public String get_ts() {
+        return _ts;
+    }
 
-	public void set_ts(String _ts) {
-		this._ts = _ts;
-	}
-
+    public void set_ts(String _ts) {
+        this._ts = _ts;
+    }
 
     public String getId() {
         return id;
