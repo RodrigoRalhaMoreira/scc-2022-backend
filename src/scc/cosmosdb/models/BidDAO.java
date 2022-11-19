@@ -1,4 +1,4 @@
-package scc.srv.cosmosdb.models;
+package scc.cosmosdb.models;
 
 import scc.srv.dataclasses.Bid;
 

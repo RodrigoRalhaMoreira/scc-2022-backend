@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.utils;
 
 import java.io.File;
 import java.io.IOException;
