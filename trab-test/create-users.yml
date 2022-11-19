@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc-backend-4204.azurewebsites.net/rest'
+  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
   plugins:
     metrics-by-endpoint: {}
   processor: "./test-utils.js"
@@ -23,7 +23,7 @@ scenarios:
             beforeRequest: "uploadImageBody"
             capture: 
               regexp: "(.+)"
-              as: "imageId"              # capture the reply as image id to be used in user creation
+              as: "photoId"              # capture the reply as image id to be used in user creation  -imageId
         - function: "genNewUser"         # Generate the needed information for the user
         - post:
             url: "/user"
@@ -34,7 +34,7 @@ scenarios:
               id: "{{ id }}"
               name: "{{ name }}"
               pwd: "{{ pwd }}"
-              photoId: "{{ imageId }}"
+              photoId: "{{ photoId }}"
               channelIds: []
             afterResponse: "genNewUserReply"    # capture result and store in file
         count: 50

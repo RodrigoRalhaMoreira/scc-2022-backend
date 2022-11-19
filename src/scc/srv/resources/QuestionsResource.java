@@ -69,30 +69,30 @@ public class QuestionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Question question,
+    public Question create(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId) throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
 
         try {
             users.checkCookieUser(session, question.getUserId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
+            return null;
         }
         
         String error = checkQuestion(question);
         
         if(error != null)
-            return error;
+            return null;
 
         if(getAuctionOwner(auctionId).equals(question.getUserId()))
-            return SAME_OWNER;
+            return null;
             
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
         jedis_instance.set("question:" + question.getId(), mapper.writeValueAsString(question));
 
         db_instance.putQuestion(dbquestion);
-        return dbquestion.getMessage();
+        return dbquestion.toQuestion();
     }
     
     @GET
@@ -143,23 +143,51 @@ public class QuestionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String reply(@CookieParam("scc:session") Cookie session, Question question,
+    public Question reply(@CookieParam("scc:session") Cookie session, String reply,
             @PathParam("id") String auctionId, @PathParam("id") String questionId) throws JsonMappingException, JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+
+        Iterator<AuctionDAO> it = db_instance.getAuctionById(auctionId).iterator();
+        String userId = ((AuctionDAO) it.next()).getOwnerId();
         
         try {
-            users.checkCookieUser(null, question.getUserId());
+            users.checkCookieUser(null, userId);
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
+            return null;
         }
+        
+        Question questioned = getQuestionById(questionId);
 
+        String questionReply = questioned.getReply();
+        
+        if(reply != null)
+            return null;
+        
+        // Updates the question in redis with the new reply and stores the new question (reply)
+        try {
+            String res = jedis_instance.get("question:" + questionId);
+            if(res != null) {
+                questioned.setReply(reply);
+                jedis_instance.set("question:" + questionId, mapper.writeValueAsString(questioned));
+            }
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
+        // Updates the question in the database with the new reply and stores the new question (reply)
+        QuestionDAO dbQuestion = new QuestionDAO(questioned);
+        dbQuestion.setReply(reply);
+        db_instance.updateQuestion(dbQuestion);
+        
+        return dbQuestion.toQuestion();
+        /**
         String error = checkQuestion(question);
         
         if(error != null)
             return null;
 
         if (!question.getUserId().equals(getAuctionOwner(auctionId))) // question.getAuctionId()
-            return ONLY_OWNER_ERROR;
+            return null;
         
         Question questioned = getQuestionById(questionId);
         
@@ -167,7 +195,7 @@ public class QuestionsResource {
         String newReply = question.getMessage();
         
         if(reply != null)
-            return REPLY_ALREADY_DONE;
+            return null;
         
         // Updates the question in redis with the new reply and stores the new question (reply)
         try {
@@ -188,7 +216,7 @@ public class QuestionsResource {
         
         QuestionDAO dbReply = new QuestionDAO(question);
         db_instance.putQuestion(dbReply);
-        return dbReply.getMessage();
+        return dbReply.toQuestion();  ***/
     }
     
     // --------------------------------------------------- PRIVATE METHODS ----------------------------------------

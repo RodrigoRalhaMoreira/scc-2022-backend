@@ -7,7 +7,7 @@ public class RecentAuctionDAO {
     private String _rid;
     private String _ts;
     private String id;
-    private String timeDifference;
+    private int timeDifference;
     
     public RecentAuctionDAO() {}
     
@@ -15,7 +15,7 @@ public class RecentAuctionDAO {
         this(ra.getId(), ra.getTimeDifference());
     }
     
-    public RecentAuctionDAO(String id, String timeDifference) {
+    public RecentAuctionDAO(String id, int timeDifference) {
         super();
         this.id = id;
         this.timeDifference = timeDifference;
@@ -41,7 +41,7 @@ public class RecentAuctionDAO {
         return id;
     }
 
-    public String getTimeDifference() {
+    public int getTimeDifference() {
         return timeDifference;
     }
 

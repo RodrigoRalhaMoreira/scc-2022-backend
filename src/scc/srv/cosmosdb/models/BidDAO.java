@@ -11,7 +11,7 @@ public class BidDAO {
     private String id;
     private String auctionId;
     private String userId;
-    private int value;
+    private float value;
 
     public BidDAO() {
     }
@@ -20,7 +20,7 @@ public class BidDAO {
         this(b.getId(), b.getAuctionId(), b.getUserId(), b.getValue());
     }
 
-    public BidDAO(String id, String auctionId, String userId, int value) {
+    public BidDAO(String id, String auctionId, String userId, float value) {
         super();
         this.id = id;
         this.auctionId = auctionId;
@@ -56,7 +56,7 @@ public class BidDAO {
         return userId;
     }
 
-    public int getValue() {
+    public float getValue() {
         return value;
     }
 

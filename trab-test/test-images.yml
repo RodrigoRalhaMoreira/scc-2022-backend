@@ -1,0 +1,33 @@
+config:
+  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
+  plugins:
+    metrics-by-endpoint: {}
+  processor: "./test-utils.js"
+  variables:
+     metricsProcessEndpoint : "myProcessEndpoint"  # function used to aggregate endpoints for statistics
+  phases:
+  - name: "Upload and Download media"
+    duration: 1
+    arrivalCount: 1
+    
+scenarios:
+  - name: 'Upload image'
+    weight: 1
+    flow:
+      - post:
+          url: "/media"
+          headers:
+            Content-Type: application/octet-stream
+            Accept: application/json
+          beforeRequest: "uploadImageBody"
+          afterResponse: "processUploadReply"            
+ 
+  - name: 'Download image'
+    weight: 5
+    flow:
+      - function: "selectImageToDownload"
+      - get:
+          url: "/media/{{ imageId }}"
+          headers:
+            Accept: application/octet-stream
+          ifTrue: "imageId"

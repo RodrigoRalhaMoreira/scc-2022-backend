@@ -21,10 +21,11 @@ import jakarta.ws.rs.core.MediaType;
 public class MediaResource {
 
     private static final String ERROR_MSG = "Use: java scc.utils.UploadToStorage filename";
-    private static final String FILE_UPLOADED = "File updloaded : %s";
     
     // Get connection string in the storage access keys page
-    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;EndpointSuffix=core.windows.net";
+    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=scc22;"
+            + "AccountKey=Mcu25uDpgVcSwi9c1FxegVLYmeFw3VOJ4SbdxMDJM54ZLpdk7kHFUYbrvlmiDyNthjtfa7Ah9Xau+AStL7GECQ==;"
+            + "EndpointSuffix=core.windows.net";
 
     // Get container client
     private BlobContainerClient containerClient = new BlobContainerClientBuilder()
@@ -68,7 +69,7 @@ public class MediaResource {
             e.printStackTrace();
         }
 
-        return String.format(FILE_UPLOADED, filename);
+        return filename;
     }
 
     /**

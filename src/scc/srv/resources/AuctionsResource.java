@@ -68,24 +68,24 @@ public class AuctionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Auction auction) throws IllegalArgumentException, IllegalAccessException {
+    public Auction create(@CookieParam("scc:session") Cookie session, Auction auction) throws IllegalArgumentException, IllegalAccessException {
         
         // Winning bids start by default with the value of null
         try {
             users.checkCookieUser(session, auction.getOwnerId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
+            return null;
         }
         
         String result = checkAuction(auction);
         
         if(result != null)
-            return result;
+            return null;
         
         String res = jedis_instance.get("auction:" + auction.getId());
         if (res != null)
-            return AUCTION_ALREADY_EXISTS;
+            return null;
          
         // Status special verification when creating an auction
         if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus())) 
@@ -100,7 +100,7 @@ public class AuctionsResource {
 
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.putAuction(dbAuction);
-        return dbAuction.getTitle();
+        return auction;
     }
 
     /**
@@ -181,14 +181,15 @@ public class AuctionsResource {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> popularAuctionsList() {
+    public List<Auction> popularAuctionsList() {
         // AUTH ?
         
-        List<String> list = new ArrayList<>();
+        List<Auction> list = new ArrayList<>();
         
+        Auction a = null;
         Iterator<PopularAuctionDAO> it = db_instance.getPopularAuctions().iterator();
         if (it.hasNext()) 
-            list.add(((PopularAuctionDAO) it.next()).toPopularAuction().toString());
+            list.add(getAuctionById(((PopularAuctionDAO) it.next()).getId()));
         
         return list;
     }
@@ -197,14 +198,14 @@ public class AuctionsResource {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> openAuctionsUserList() {
+    public List<Auction> recentAuctionsList() {
         // AUTH ?? 
         
-        List<String> list = new ArrayList<>();
+        List<Auction> list = new ArrayList<>();
         
         Iterator<RecentAuctionDAO> it = db_instance.getRecentAuctions().iterator();
         if (it.hasNext()) 
-            list.add(((RecentAuctionDAO) it.next()).toRecentAuction().toString());
+            list.add(getAuctionById(((RecentAuctionDAO) it.next()).getId()));
         
         return list;
     }
@@ -252,7 +253,7 @@ public class AuctionsResource {
                 return String.format(NULL_FIELD_EXCEPTION, f.getName());
         }
 
-        if (auction.getMinPrice() <= 0)
+        if (auction.getMinPrice() <= 0.0)
             return NEGATIVE_MINPRICE;
 
         if (!db_instance.getUserById(auction.getOwnerId()).iterator().hasNext())

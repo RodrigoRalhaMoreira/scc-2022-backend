@@ -22,10 +22,10 @@ public class Auction {
     @JsonProperty("ownerId")
     private String ownerId;
     @JsonProperty("endTime")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "YYYY-MM-DD'T'HH:MM:SS:MS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private Date endTime;
     @JsonProperty("minPrice")
-    private int minPrice;
+    private float minPrice;
     @JsonProperty("winningBid")
     private Bid winningBid;
     @JsonProperty("status")
@@ -35,7 +35,7 @@ public class Auction {
         super();
     }
 
-    public Auction(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, Bid winningBid, String status) {
+    public Auction(String id, String title, String desription, String imgId, String ownerId, Date endTime, float minPrice, Bid winningBid, String status) {
         this.id = id;
         this.title = title;
         this.description = desription;
@@ -95,11 +95,11 @@ public class Auction {
         this.ownerId = ownerId;
     }
 
-    public int getMinPrice() {
+    public float getMinPrice() {
         return minPrice;
     }
 
-    public void setMinPrice(int minPrice) {
+    public void setMinPrice(float minPrice) {
         this.minPrice = minPrice;
     }
 

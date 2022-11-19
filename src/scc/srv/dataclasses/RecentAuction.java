@@ -7,13 +7,13 @@ public class RecentAuction {
     @JsonProperty("id")
     private String id;
     @JsonProperty("time_difference")
-    private String timeDifference;
+    private int timeDifference;
 
     public RecentAuction() {
         super();
     }
 
-    public RecentAuction(String id, String timeDifference) {
+    public RecentAuction(String id, int timeDifference) {
         this.id = id;
         this.timeDifference = timeDifference;
     }
@@ -22,7 +22,7 @@ public class RecentAuction {
         return id;
     }
     
-    public String getTimeDifference() {
+    public int getTimeDifference() {
         return timeDifference;
     }
 

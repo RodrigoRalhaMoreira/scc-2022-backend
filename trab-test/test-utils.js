@@ -9,8 +9,8 @@ module.exports = {
   genNewUserReply
 }
 
-
-const Faker = require('faker')
+// const Faker = require('faker')
+const Faker = require('@faker-js/faker').faker
 const fs = require('fs')
 
 var imagesIds = []
@@ -119,13 +119,14 @@ function genNewUser(context, events, done) {
 	return done()
 }
 
-
 /**
  * Process reply for of new users to store the id on file
  */
 function genNewUserReply(requestParams, response, context, ee, next) {
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		let u = JSON.parse( response.body)
+		console.log("REQ PARAM: " + requestParams + ", RESP BODY: " + '' + response.body + ", RESPONSE: " + response.statusCode
+		+ ", EE: " + ee)
+		let u = JSON.parse("" + response.body)
 		users.push(u)
 		fs.writeFileSync('users.data', JSON.stringify(users));
 	}

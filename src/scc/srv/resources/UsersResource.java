@@ -60,7 +60,7 @@ public class UsersResource {
             if (resource instanceof MediaResource)
                 media = (MediaResource) resource;
     }
-
+    
     /**
      * Creates a new user.The id of the user is its hash.
      * @throws IllegalAccessException 
@@ -69,16 +69,16 @@ public class UsersResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(User user) throws IllegalArgumentException, IllegalAccessException {
+    public User create(User user) throws IllegalArgumentException, IllegalAccessException {
         
         String error = checkUser(user);
         
         if(error != null)
-            return error;
+            return null; // error;
 
         String res = jedis_instance.get("user:" + user.getId());
         if (res != null)
-            return USER_ALREADY_EXISTS;
+            return null; // USER_ALREADY_EXISTS;
 
         UserDAO userDao = new UserDAO(user);
         try {
@@ -88,7 +88,7 @@ public class UsersResource {
         }
         
         db_instance.putUser(userDao);
-        return userDao.getId();
+        return userDao.toUser();
     }
 
     /**

@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc23appnortheurope4204.azurewebsites.net/rest'
+  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
   http:
     timeout: 10
   plugins:
@@ -7,8 +7,8 @@ config:
       useOnlyRequestNames: true  # new mode to aggregate metrics in artillery
   processor: "./test-utils.js"
   variables:
-    numAuctions : 300
-    maxBids : 10  # maximum number of bids to generate for each new auction
+    numAuctions : 5
+    maxBids : 3  # maximum number of bids to generate for each new auction
     maxQuestions : 2 # maximum number of questions to generate for each new auction
   phases:
   - name: "Create auctions"    # Create channels
@@ -27,7 +27,7 @@ scenarios:
             headers:
               Content-Type: application/json
             json:
-              user: "{{ user }}"
+              id: "{{ user }}" #user
               pwd: "{{ pwd }}"
         - function: "genNewAuction"
         - post:                          # First: post image for the auction
@@ -47,17 +47,19 @@ scenarios:
               Content-Type: application/json
               Accept: application/json
             json:
+              id: "{{ id }}"   # NEW
               description: "{{ description }}"
               title: "{{ title }}"
-              owner: "{{ user }}"
-              imageId: "{{ imageId }}"
+              ownerId: "{{ user }}"
+              imgId: "{{ imageId }}"
               endTime: "{{ endTime }}"
-              minimumPrice: "{{ minimumPrice }}"
+              minPrice: "{{ minimumPrice }}"
               status: "{{ status }}"
+              winningBid: "{{ winningBid }}"
             capture:                     # Capturing auction id and store it in variable auctionId
               - json: $.id
                 as: "auctionId"
-              - json: $.owner
+              - json: $.ownerId
                 as: "auctionUser"
         - loop:                          # Let's add numBids bids to the auction
           - function: "selectUserSkewed"
@@ -78,8 +80,9 @@ scenarios:
                 Accept: application/json
               json:
                 auctionId: "{{ auctionId }}"
-                user: "{{ user }}"
+                userId: "{{ user }}"
                 value: "{{ value }}"
+                id: "{{ id }}" # NEW
           count: "{{ numBids }}"   
         - loop:                          # Let's add numQuestions questions to the auction
           - function: "selectUserSkewed"
@@ -99,9 +102,11 @@ scenarios:
                 Content-Type: application/json
                 Accept: application/json
               json:
+                id: "{{ id }}" # NEW
                 auctionId: "{{ auctionId }}"
-                user: "{{ user }}"
-                text: "{{ text }}"
+                userId: "{{ user }}"
+                message: "{{ text }}"
+                reply: "{{ reply }}"
               capture:                     # Capturing question id and store it in variable questionId
                 - json: $.id
                   as: "questionId"
@@ -122,6 +127,10 @@ scenarios:
                 Content-Type: application/json
                 Accept: application/json
               json:
+                id: "{{ id }}"
+                auctionId: "{{ auctionId }}"
+                userId: "{{ user }}"
+                message: "{{ text }}"
                 reply: "{{ reply }}"
               ifTrue: "reply"
           count: "{{ numQuestions }}"   

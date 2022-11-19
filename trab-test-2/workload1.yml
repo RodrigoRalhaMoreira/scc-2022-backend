@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc23appnortheurope4204.azurewebsites.net/rest'
+  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
   http:
     timeout: 10
   plugins:

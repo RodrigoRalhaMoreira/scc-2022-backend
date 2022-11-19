@@ -67,7 +67,7 @@ public class BidResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Bid bid) throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+    public Bid create(@CookieParam("scc:session") Cookie session, Bid bid) throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
         
         /**
          * TODO
@@ -80,13 +80,13 @@ public class BidResource {
             users.checkCookieUser(session, bid.getUserId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
+            return null;
         }
         
         String result = checkBid(bid);
         
         if(result != null)
-            return result;
+            return null;
         
         String res = jedis_instance.get("auction:" + bid.getAuctionId());
         Auction redis_auction = mapper.readValue(res, Auction.class); //Auction
@@ -94,20 +94,20 @@ public class BidResource {
         Bid auctionWinningBid = redis_auction.getWinnigBid();
         String auctionOwnerId = redis_auction.getOwnerId();
         String auctionStatus = redis_auction.getStatus();
-        int auctionMinPrice = redis_auction.getMinPrice(); 
+        float auctionMinPrice = redis_auction.getMinPrice(); 
         
         // bid value has to be higher than current winning bid for that auction
         if(auctionWinningBid != null && auctionWinningBid.getValue() >= bid.getValue())
-            return LOWER_BIDVALUE;
+            return null;
         
         if(auctionOwnerId.equals(bid.getUserId()))
-            return SAME_OWNER;
+            return null;
         
         if(!auctionStatus.equals("open"))
-            return AUCTION_NOT_OPEN;
+            return null;
         
         if(bid.getValue() < auctionMinPrice)
-            return LOWER_THAN_MIN_VALUE;
+            return null;
 
         jedis_instance.set("auction:" + redis_auction.getId(), mapper.writeValueAsString(redis_auction));
         jedis_instance.set("bid:" + bid.getId(), mapper.writeValueAsString(bid));
@@ -120,8 +120,7 @@ public class BidResource {
         // Create the bid to store in the database
         BidDAO dbbid = new BidDAO(bid);
         db_instance.putBid(dbbid);
-        return dbbid.getId();
-
+        return dbbid.toBid();
     }
 
     // Another one that we have to decide wether we want this info on cache or not.
