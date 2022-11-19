@@ -1,12 +1,13 @@
 package scc.cosmosdb.models;
 
 import java.util.Arrays;
-
 import scc.srv.dataclasses.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * Represents a User, as stored in the database
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDAO {
 	private String _rid;
 	private String _ts;
