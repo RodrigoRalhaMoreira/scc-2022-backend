@@ -11,9 +11,9 @@
     <authors>XXXXX-YYYYY-ZZZZZ</authors>
     <java.version>11</java.version>
 	<functionAppName>scc2223funwesteuropenmp-drt</functionAppName>
-	<functionAppRegion>westeurope</functionAppRegion>
-	<functionPricingTier>B1</functionPricingTier>
-	<functionResourceGroup>scc23-rg-westeurope-nmp-drt</functionResourceGroup>
+    <functionAppRegion>westeurope</functionAppRegion>
+    <functionPricingTier>B1</functionPricingTier>
+    <functionResourceGroup>scc23-rg-westeurope-groupdrt</functionResourceGroup>
   </properties>  
   <dependencies> 
     <dependency> 

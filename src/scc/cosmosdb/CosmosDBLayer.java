@@ -254,4 +254,12 @@ public class CosmosDBLayer {
 		}
 		return cpi;
 	}
+
+    public CosmosPagedIterable<AuctionDAO> getAuctionsAboutToClose() {
+        init();
+		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\""
+						+ "AND auctions.endTime <= (GetCurrentTimestamp() + 86400)",
+				new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
+    }
 }

@@ -13,6 +13,7 @@ import jakarta.ws.rs.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.lang.reflect.Field;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
@@ -211,6 +212,21 @@ public class AuctionsResource {
         Iterator<RecentAuctionDAO> it = db_instance.getRecentAuctions().iterator();
         if (it.hasNext())
             list.add(((RecentAuctionDAO) it.next()).toRecentAuction().toString());
+
+        return list;
+    }
+    @Path("/any/aboutclose")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> auctionsAboutToClose() {
+
+        List<String> list = new ArrayList<>();
+
+        Set<String> auctions = jedis_instance.keys("auction:*");
+        
+        Iterator<String> it = auctions.iterator();
+        while(it.hasNext())
+            list.add(it.next());
 
         return list;
     }
