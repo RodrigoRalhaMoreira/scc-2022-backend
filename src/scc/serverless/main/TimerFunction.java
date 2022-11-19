@@ -6,8 +6,8 @@ import com.microsoft.azure.functions.annotation.*;
 
 import redis.clients.jedis.Jedis;
 import scc.cache.RedisCache;
-import scc.srv.cosmosdb.CosmosDBLayer;
-import scc.srv.cosmosdb.models.AuctionDAO;
+import scc.cosmosdb.CosmosDBLayer;
+import scc.cosmosdb.models.AuctionDAO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;

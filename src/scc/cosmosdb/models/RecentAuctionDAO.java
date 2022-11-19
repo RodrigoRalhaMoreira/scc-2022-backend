@@ -1,20 +1,21 @@
-package scc.srv.cosmosdb.models;
+package scc.cosmosdb.models;
 
 import scc.srv.dataclasses.RecentAuction;
 
 public class RecentAuctionDAO {
-    
+
     private String _rid;
     private String _ts;
     private String id;
     private String timeDifference;
-    
-    public RecentAuctionDAO() {}
-    
+
+    public RecentAuctionDAO() {
+    }
+
     public RecentAuctionDAO(RecentAuction ra) {
         this(ra.getId(), ra.getTimeDifference());
     }
-    
+
     public RecentAuctionDAO(String id, String timeDifference) {
         super();
         this.id = id;
@@ -51,7 +52,8 @@ public class RecentAuctionDAO {
 
     @Override
     public String toString() {
-        return "RecentAuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", timeDifference=" + timeDifference + "]";
+        return "RecentAuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", timeDifference=" + timeDifference
+                + "]";
     }
 
 }
