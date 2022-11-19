@@ -2,7 +2,7 @@ package scc.serverless.main;
 
 import com.microsoft.azure.functions.annotation.*;
 
-import scc.srv.MediaResource;
+import scc.srv.resources.MediaResource;
 
 import com.microsoft.azure.functions.*;
 

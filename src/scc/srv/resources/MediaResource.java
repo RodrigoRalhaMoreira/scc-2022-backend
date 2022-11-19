@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.srv.resources;
 
 import jakarta.ws.rs.*;
 import scc.utils.Hash;
@@ -20,6 +20,9 @@ import jakarta.ws.rs.core.MediaType;
 @Path("/media")
 public class MediaResource {
 
+    private static final String ERROR_MSG = "Use: java scc.utils.UploadToStorage filename";
+    private static final String FILE_UPLOADED = "File updloaded : %s";
+    
     // Get connection string in the storage access keys page
     private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;EndpointSuffix=core.windows.net";
 
@@ -46,9 +49,8 @@ public class MediaResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String upload(byte[] contents) {
 
-        if (contents == null) {
-            System.out.println("Use: java scc.utils.UploadToStorage filename");
-        }
+        if (contents == null)
+            return ERROR_MSG;
 
         String filename = Hash.of(contents);
 
@@ -62,13 +64,11 @@ public class MediaResource {
             // Upload contents from BinaryData (check documentation for other alternatives)
             blob.upload(data);
 
-            System.out.println("File updloaded : " + filename);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return filename;
+        return String.format(FILE_UPLOADED, filename);
     }
 
     /**

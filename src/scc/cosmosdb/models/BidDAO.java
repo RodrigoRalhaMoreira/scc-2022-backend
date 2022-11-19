@@ -1,4 +1,6 @@
-package scc.srv;
+package scc.cosmosdb.models;
+
+import scc.srv.dataclasses.Bid;
 
 /**
  * Represents a Bid, as stored in the database

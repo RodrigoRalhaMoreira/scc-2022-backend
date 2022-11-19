@@ -1,6 +1,9 @@
-package scc.srv;
+package scc.cosmosdb.models;
 
 import java.util.Date;
+
+import scc.srv.dataclasses.Auction;
+import scc.srv.dataclasses.Bid;
 
 public class AuctionDAO {
 
@@ -16,13 +19,16 @@ public class AuctionDAO {
     private Bid winningBid;
     private String status;
 
-    public AuctionDAO() {}
-
-    public AuctionDAO(Auction a) {
-        this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getEndTime(), a.getMinPrice(), a.getWinnigBid(), a.getStatus());
+    public AuctionDAO() {
     }
 
-    public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime, int minPrice, Bid winningBid, String status) {
+    public AuctionDAO(Auction a) {
+        this(a.getId(), a.getTitle(), a.getDescription(), a.getImgId(), a.getOwnerId(), a.getEndTime(), a.getMinPrice(),
+                a.getWinningBid(), a.getStatus());
+    }
+
+    public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime,
+            int minPrice, Bid winningBid, String status) {
         super();
         this.id = id;
         this.title = title;
@@ -34,22 +40,22 @@ public class AuctionDAO {
         this.winningBid = winningBid;
         this.status = status;
     }
-    
-	public String get_rid() {
-		return _rid;
-	}
 
-	public void set_rid(String _rid) {
-		this._rid = _rid;
-	}
+    public String get_rid() {
+        return _rid;
+    }
 
-	public String get_ts() {
-		return _ts;
-	}
+    public void set_rid(String _rid) {
+        this._rid = _rid;
+    }
 
-	public void set_ts(String _ts) {
-		this._ts = _ts;
-	}
+    public String get_ts() {
+        return _ts;
+    }
+
+    public void set_ts(String _ts) {
+        this._ts = _ts;
+    }
 
     public String getId() {
         return id;
@@ -111,8 +117,8 @@ public class AuctionDAO {
         return winningBid;
     }
 
-    public void setWinnigBid(Bid winnigBid) {
-        this.winningBid = winnigBid;
+    public void setWinnigBid(Bid winningBid) {
+        this.winningBid = winningBid;
     }
 
     public String getStatus() {
@@ -128,13 +134,15 @@ public class AuctionDAO {
     }
 
     @Override
-	public String toString() {
+    public String toString() {
         String str = "";
-        if(winningBid == null)
+        if (winningBid == null)
             str = "[]";
-        else 
+        else
             str = winningBid.toString();
-		return "AuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id= " + id +", title=" + title + ", description=" + description + ", imgId=" + imgId
-				+ ", ownerId=" + ownerId +  ", endTime=" + endTime + ", minPrice=" + minPrice + ", winnigBid=" + str +", status="+ status + "]";
-	}
+        return "AuctionDAO [_rid=" + _rid + ", _ts=" + _ts + ", id= " + id + ", title=" + title + ", description="
+                + description + ", imgId=" + imgId
+                + ", ownerId=" + ownerId + ", endTime=" + endTime + ", minPrice=" + minPrice + ", winningBid=" + str
+                + ", status=" + status + "]";
+    }
 }

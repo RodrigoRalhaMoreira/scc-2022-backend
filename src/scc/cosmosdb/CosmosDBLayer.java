@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.cosmosdb;
 
 import java.util.Iterator;
 
@@ -12,6 +12,15 @@ import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.util.CosmosPagedIterable;
+
+import scc.cosmosdb.models.AuctionDAO;
+import scc.cosmosdb.models.BidDAO;
+import scc.cosmosdb.models.LoginDAO;
+import scc.cosmosdb.models.PopularAuctionDAO;
+import scc.cosmosdb.models.QuestionDAO;
+import scc.cosmosdb.models.RecentAuctionDAO;
+import scc.cosmosdb.models.UserDAO;
+import scc.srv.dataclasses.AuctionStatus;
 
 public class CosmosDBLayer {
 	private static final String CONNECTION_URL = "https://scc23groupdrt.documents.azure.com:443/";
@@ -46,6 +55,8 @@ public class CosmosDBLayer {
 	private CosmosContainer auctions;
 	private CosmosContainer bids;
 	private CosmosContainer login;
+	private CosmosContainer popularAuctions;
+	private CosmosContainer recentAuctions;
 
 	public CosmosDBLayer(CosmosClient client) {
 		this.client = client;
@@ -60,6 +71,8 @@ public class CosmosDBLayer {
 		questions = db.getContainer("questions");
 		bids = db.getContainer("bids");
 		login = db.getContainer("login");
+		popularAuctions = db.getContainer("popularAuctions");
+		recentAuctions = db.getContainer("recentAuctions");
 
 	}
 
@@ -134,6 +147,20 @@ public class CosmosDBLayer {
 				BidDAO.class);
 	}
 
+	public CosmosPagedIterable<QuestionDAO> getQuestionsById(String id) {
+		init();
+		return questions.queryItems("SELECT * FROM questions WHERE questions.id=\"" + id + "\"",
+				new CosmosQueryRequestOptions(),
+				QuestionDAO.class);
+	}
+
+	public CosmosPagedIterable<QuestionDAO> getQuestionsByAuctionId(String id) {
+		init();
+		return questions.queryItems("SELECT * FROM questions WHERE questions.auctionId=\"" + id + "\"",
+				new CosmosQueryRequestOptions(),
+				QuestionDAO.class);
+	}
+
 	public CosmosPagedIterable<AuctionDAO> getAuctionById(String id) {
 		init();
 		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.id=\"" + id + "\"",
@@ -146,6 +173,11 @@ public class CosmosDBLayer {
 		return auctions.upsertItem(dbAuction);
 	}
 
+	public CosmosItemResponse<QuestionDAO> updateQuestion(QuestionDAO dbQuestion) {
+		init();
+		return questions.upsertItem(dbQuestion);
+	}
+
 	public CosmosItemResponse<LoginDAO> putLogin(LoginDAO loginDAO) {
 		init();
 		return login.createItem(loginDAO);
@@ -156,14 +188,56 @@ public class CosmosDBLayer {
 		return login.queryItems("SELECT * FROM login WHERE login.id=\"" + id + "\"",
 				new CosmosQueryRequestOptions(),
 				LoginDAO.class);
-    }
+	}
+
+	public CosmosPagedIterable<AuctionDAO> getOpenAuctions(String id) {
+		init();
+		return auctions.queryItems(
+				"SELECT * FROM auctions WHERE auctions.ownerId=\"" + id + "\"" + "AND auctions.status=\""
+						+ AuctionStatus.OPEN.getStatus() + "\"",
+				new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
+	}
+
+	public CosmosPagedIterable<AuctionDAO> getAllAuctions() {
+		init();
+		return auctions.queryItems("SELECT * FROM auctions",
+				new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
+	}
+
+	public CosmosPagedIterable<QuestionDAO> getQuestionsByUserId(String id) {
+		init();
+		return questions.queryItems("SELECT * FROM questions WHERE questions.userId=\"" + id + "\"",
+				new CosmosQueryRequestOptions(),
+				QuestionDAO.class);
+	}
+
+	public CosmosPagedIterable<BidDAO> getBidsByUserId(String id) {
+		init();
+		return bids.queryItems("SELECT * FROM bids WHERE bids.userId=\"" + id + "\"",
+				new CosmosQueryRequestOptions(),
+				BidDAO.class);
+	}
 
 	public CosmosPagedIterable<AuctionDAO> getAuctionUserFollow(String id) {
 		init();
-        return auctions.queryItems("SELECT * FROM auctions WHERE auctions.winningBid.userId=\"" + id + "\"",
-			new CosmosQueryRequestOptions(),
+		return auctions.queryItems("SELECT * FROM auctions WHERE auctions.winningBid.userId=\"" + id + "\"",
+				new CosmosQueryRequestOptions(),
 				AuctionDAO.class);
-    }
+	}
+
+	public CosmosPagedIterable<PopularAuctionDAO> getPopularAuctions() {
+		init();
+		return popularAuctions.queryItems("SELECT * FROM popularAuctions", new CosmosQueryRequestOptions(),
+				PopularAuctionDAO.class);
+	}
+
+	public CosmosPagedIterable<RecentAuctionDAO> getRecentAuctions() {
+		init();
+		return recentAuctions.queryItems("SELECT * FROM recentAuctions", new CosmosQueryRequestOptions(),
+				RecentAuctionDAO.class);
+	}
 
 	public CosmosPagedIterable<AuctionDAO> getCloseAuctions() {
 		init();

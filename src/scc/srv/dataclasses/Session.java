@@ -1,4 +1,4 @@
-package scc.srv;
+package scc.srv.dataclasses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
