@@ -25,7 +25,7 @@ import scc.srv.dataclasses.AuctionStatus;
 public class CosmosDBLayer {
 	private static final String CONNECTION_URL = "https://tiagoduarte25.documents.azure.com:443/";
 	private static final String DB_KEY = "2OaqfBxw7Yrc1cKC6DK7SMmhiUBhF7wnFWppftLgFWMfZROg5iyYuRxI0LUsCXyhcas7et2Rrb9sACDbNBTB9w==";
-	private static final String DB_NAME = "tiagoduarte25";
+	private static final String DB_NAME = "ToDoList";
 
 	private static CosmosDBLayer instance;
 

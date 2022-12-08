@@ -69,10 +69,10 @@ public class UsersResource {
     @Produces(MediaType.APPLICATION_JSON)
     public String create(User user) throws IllegalArgumentException, IllegalAccessException {
 
-        String error = checkUser(user);
+        //String error = checkUser(user);
 
-        if (error != null)
-            return error;
+        //if (error != null)
+        //    return error;
 
         String res = jedis_instance.get("user:" + user.getId());
         if (res != null)
