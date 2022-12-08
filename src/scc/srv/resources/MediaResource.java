@@ -5,23 +5,12 @@ import scc.utils.Hash;
 import jakarta.ws.rs.*;
 import java.util.List;
 
-import org.apache.logging.log4j.core.util.FileUtils;
-
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import jakarta.ws.rs.core.MediaType;
-import com.azure.core.util.BinaryData;
-import com.azure.storage.blob.BlobClient;
-import com.azure.core.http.rest.PagedIterable;
-import com.azure.storage.blob.models.BlobItem;
-import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobContainerClientBuilder;
 
 /**
  * Resource for managing media files, such as images.
