@@ -23,6 +23,5 @@ public class RedisCache {
 		poolConfig.setBlockWhenExhausted(true);
 		instance = new JedisPool(poolConfig, RedisHostname, 6380, 1000, RedisKey, true);
 		return instance;
-
 	}
 }
