@@ -4,12 +4,15 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisCache {
-	private static final String RedisHostname = "scc-backend-drt.redis.cache.windows.net";
-	private static final String RedisKey = "NxvshIdAYlZKTmNMLPXsAkFzykHbllbodAzCaG1aILk=";
+	private static final String RedisHostname = System.getenv("REDIS");
+
+	// private static final String RedisKey =
+	// "NxvshIdAYlZKTmNMLPXsAkFzykHbllbodAzCaG1aILk=";
 
 	private static JedisPool instance;
 
 	public synchronized static JedisPool getCachePool() {
+
 		if (instance != null)
 			return instance;
 		final JedisPoolConfig poolConfig = new JedisPoolConfig();
@@ -21,7 +24,8 @@ public class RedisCache {
 		poolConfig.setTestWhileIdle(true);
 		poolConfig.setNumTestsPerEvictionRun(3);
 		poolConfig.setBlockWhenExhausted(true);
-		instance = new JedisPool(poolConfig, RedisHostname, 6380, 1000, RedisKey, true);
+		instance = new JedisPool(poolConfig, RedisHostname, 6380, 1000, true);
 		return instance;
+
 	}
 }
