@@ -22,7 +22,7 @@ public class MediaResource {
     private static final String ERROR_MSG = "Use: java scc.utils.UploadToStorage filename";
 
     // Get connection string in the storage access keys page
-    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=sccstwesteuropegroupdrt;AccountKey=p+zGE3C0Q13lLPnZQ/sl2qCY0uLbUWBV+a7/rIGQdmeG0O3iDTzluDs0SInKASyWS5EiNPGhNZuU+ASttJVNeA==;EndpointSuffix=core.windows.net";
+    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=tiagoduarte25;AccountKey=ikbZSy5e+qs3MqTmD65yxQHcuh9irZ6+/nh2ZzkBc66lqyG1YlMId5wyblwS93NJ64b8LxoLn0jv+AStmjVQvg==;EndpointSuffix=core.windows.net";
 
     // Get container client
     private BlobContainerClient containerClient = new BlobContainerClientBuilder()

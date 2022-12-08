@@ -23,9 +23,9 @@ import scc.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.AuctionStatus;
 
 public class CosmosDBLayer {
-	private static final String CONNECTION_URL = "https://scc23groupdrt.documents.azure.com:443/";
-	private static final String DB_KEY = "nNaQx90GgUrilUlFIx9N1B7zv8wzblpSczL4IGGbFNIt5Q2YiOImwWUxIwieZmXbE3ELDhKSDSlbACDbwYwY4A==";
-	private static final String DB_NAME = "scc23dbgroupdrt";
+	private static final String CONNECTION_URL = "https://tiagoduarte25.documents.azure.com:443/";
+	private static final String DB_KEY = "2OaqfBxw7Yrc1cKC6DK7SMmhiUBhF7wnFWppftLgFWMfZROg5iyYuRxI0LUsCXyhcas7et2Rrb9sACDbNBTB9w====";
+	private static final String DB_NAME = "tiagoduarte25";
 
 	private static CosmosDBLayer instance;
 

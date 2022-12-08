@@ -4,8 +4,8 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisCache {
-	private static final String RedisHostname = "rediswesteuropegroupdrt.redis.cache.windows.net";
-	private static final String RedisKey = "1fVARKKhJJpKYkrtjmuGgXpWJhoxfKSU7AzCaOPUqT8=";
+	private static final String RedisHostname = "scc-backend-drt.redis.cache.windows.net";
+	private static final String RedisKey = "NxvshIdAYlZKTmNMLPXsAkFzykHbllbodAzCaG1aILk=";
 
 	private static JedisPool instance;
 
