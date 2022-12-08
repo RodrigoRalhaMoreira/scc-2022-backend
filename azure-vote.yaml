@@ -72,6 +72,15 @@ spec:
         env:
         - name: redis
           value: "redis"
+        - name: azure-managed-disk
+          value: "/mnt/vol"
+        volumeMounts:
+          - mountPath: "/mnt/vol"
+            name: mediavolume
+      volumes:
+      - name: mediavolume
+        persistentVolumeClaim:
+          claimName: azure-managed-disk
 ---
  apiVersion: v1
  kind: Service
@@ -84,3 +93,15 @@ spec:
     targetPort: 8080
   selector:
     app: scc-backend-drt
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azure-managed-disk
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 1Gi
