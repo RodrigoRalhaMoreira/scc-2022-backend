@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc23appnortheurope4204.azurewebsites.net/rest'
+  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
   http:
     timeout: 10
   plugins:
@@ -67,7 +67,7 @@ scenarios:
         - function: "decideToReply"
         - post:                          # New reply     
             url: "/auction/{{ $loopElement.id }}/question/{{ questionOne.id }}/reply"
-            name: "ÂªPOST:/auction/*/question/*/reply"
+            name: "ªPOST:/auction/*/question/*/reply"
             headers:
               Content-Type: application/json
               Accept: application/json
