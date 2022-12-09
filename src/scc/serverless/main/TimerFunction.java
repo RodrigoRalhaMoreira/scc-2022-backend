@@ -1,16 +1,17 @@
 package scc.serverless.main;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
-import com.microsoft.azure.functions.annotation.*;
-
-import redis.clients.jedis.Jedis;
 import scc.cache.RedisCache;
 import scc.cosmosdb.CosmosDBLayer;
 import scc.cosmosdb.models.AuctionDAO;
+import scc.srv.dataclasses.Auction;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.*;
+import redis.clients.jedis.Jedis;
 import com.microsoft.azure.functions.*;
+import redis.clients.jedis.params.SetParams;
+import com.microsoft.azure.functions.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * Azure Functions with Timer Trigger.
@@ -28,43 +29,30 @@ public class TimerFunction {
 	}
 
 	@FunctionName("closeAuction")
-	public void cosmosFunction(@TimerTrigger(name = "closeAuctionTrigger", schedule = "*/1 * * * * *") String timerInfo,
+	public void cosmosFunction(
+			@TimerTrigger(name = "closeAuctionTrigger", schedule = "30 * */2 * * *") String timerInfo,
 			ExecutionContext context) {
 
-		context.getLogger().info("Timer is triggered CLOSE AUCTION: " + timerInfo);
-		try {
-			jedis_instance.incr("cnt:timer");
-			jedis_instance.set("serverless-time",
-					new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(new Date()));
-		} catch (Exception e) {
-			context.getLogger().info(e.getMessage());
-		}
-
-		Iterator<AuctionDAO> it = db_instance.getCloseAuctions().iterator();
-
-		try {
-			while (it.hasNext()) {
-				AuctionDAO auction = it.next();
-				jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(auction));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		db_instance.closeAuctions();
 	}
 
-	@FunctionName("keepAlive")
-	public void keepAlive(
-			@TimerTrigger(name = "keepAliveTrigger", schedule = "*/1 * * * * *") String timerInfo,
+	@FunctionName("auctionsAboutToClose")
+	public void auctionsAboutToClose(
+			@TimerTrigger(name = "auctionsAboutToClose", schedule = "30 * */5 * * *") String timerInfo,
 			ExecutionContext context) {
 
-		context.getLogger().info("Timer is triggered KEEP ALIVE: " + timerInfo);
+		context.getLogger().info("Timer is triggered AUCTIONS ABOUT TO CLOSE: " + timerInfo);
 
-		try {
-			jedis_instance.incr("cnt:timer");
-			jedis_instance.set("serverless-time",
-					new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(new Date()));
-		} catch (Exception e) {
-			context.getLogger().info(e.getMessage());
+		Iterator<AuctionDAO> it = db_instance.getAuctionsAboutToClose().iterator();
+		while (it.hasNext()) {
+			Auction auction = it.next().toAuction();
+			try {
+				jedis_instance.set("auction:" + auction.getId(), mapper.writeValueAsString(auction),
+						SetParams.setParams().ex(86400).nx());
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }

@@ -5,7 +5,7 @@ mvn clean compile assembly:single
 
 Then you deploy it:
 az login
-az account set --subscription "1d174378-ca44-4436-a490-f7f93363a27b"
+az account set --subscription "887bf2f2-2f25-4a70-99b4-528dc74419f3"
 mvn clean compile package azure-webapp:deploy
 
 Then you can make the requests on postman

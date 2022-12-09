@@ -3,7 +3,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">  
   <modelVersion>4.0.0</modelVersion>  
   <groupId>pt.unl.fct.di.scc</groupId>  
-  <artifactId>scc2223-lab1</artifactId>  
+  <artifactId>scc2223-backend-1.0</artifactId>  
   <version>1.0</version>  
   <packaging>war</packaging>  
   <properties> 
@@ -11,9 +11,9 @@
     <authors>XXXXX-YYYYY-ZZZZZ</authors>
     <java.version>11</java.version>
 	<functionAppName>scc2223funwesteuropenmp-drt</functionAppName>
-	<functionAppRegion>westeurope</functionAppRegion>
-	<functionPricingTier>B1</functionPricingTier>
-	<functionResourceGroup>scc23-rg-westeurope-nmp-drt</functionResourceGroup>
+    <functionAppRegion>westeurope</functionAppRegion>
+    <functionPricingTier>B1</functionPricingTier>
+    <functionResourceGroup>scc23-rg-westeurope-groupdrt</functionResourceGroup>
   </properties>  
   <dependencies> 
     <dependency> 
@@ -62,9 +62,9 @@
       <version>6.1.0.Final</version> 
     </dependency>  
     <dependency>
-	<groupId>com.azure</groupId>
-	<artifactId>azure-cosmos</artifactId>
-	<version>4.37.0</version>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-cosmos</artifactId>
+      <version>4.37.0</version>
 	</dependency>
 	<dependency>
 		<groupId>org.apache.commons</groupId>
@@ -166,8 +166,8 @@
               </resource> 
             </resources> 
           </deployment>  
-          <resourceGroup>SCC</resourceGroup>  
-          <appName>scc-backend-57943-58125-58763</appName> 
+          <resourceGroup>scc-backend-drt</resourceGroup>  
+          <appName>scc-backend-drt</appName> 
         </configuration> 
       </plugin> 
 	  <plugin>

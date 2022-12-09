@@ -1,23 +1,22 @@
 package scc.srv.resources;
 
 import scc.cache.RedisCache;
+import scc.srv.dataclasses.Bid;
+import scc.srv.MainApplication;
 import scc.cosmosdb.CosmosDBLayer;
+import scc.srv.dataclasses.Auction;
 import scc.cosmosdb.models.AuctionDAO;
 import scc.cosmosdb.models.BidDAO;
-import scc.srv.MainApplication;
-import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.AuctionStatus;
-import scc.srv.dataclasses.Bid;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Cookie;
-import jakarta.ws.rs.core.MediaType;
-import redis.clients.jedis.Jedis;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
+import jakarta.ws.rs.*;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.lang.reflect.Field;
+import jakarta.ws.rs.core.Cookie;
+import redis.clients.jedis.Jedis;
+import jakarta.ws.rs.core.MediaType;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -28,23 +27,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class BidResource {
 
     private static final String BID_NULL = "Null bid exception";
+    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
     private static final String AUCTION_NOT_EXISTS = "Auction does not exist";
     private static final String BID_ALREADY_EXISTS = "AuctionId already exists";
-    private static final String NEGATIVE_VALUE = "value can not be negative or zero";
-    private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
-    private static final String SAME_OWNER = "Owner of the bid can not bid on his own auction";
     private static final String AUCTION_NOT_OPEN = "Can only bid in an open auction";
+    private static final String NEGATIVE_VALUE = "value can not be negative or zero";
+    private static final String SAME_OWNER = "Owner of the bid can not bid on his own auction";
     private static final String LOWER_THAN_MIN_VALUE = "Value can not be lower than auction's minValue";
     private static final String LOWER_BIDVALUE = "Current bid value has to be higher than current winning bid value for that auction";
     private static final int DEFAULT_REDIS_EXPIRE = 600;
 
-    private static CosmosDBLayer db_instance;
     private UsersResource users;
-    private static Jedis jedis_instance;
     private ObjectMapper mapper;
-
-    // Improvements to be made. If we have "id" of auction as PathParam we should
-    // not have to pass it as param in POST request.
+    private static Jedis jedis_instance;
+    private static CosmosDBLayer db_instance;
 
     public BidResource() {
         db_instance = CosmosDBLayer.getInstance();
@@ -58,6 +54,7 @@ public class BidResource {
 
     /**
      * Creates a new bid.
+     * 
      * @throws Exception
      */
     @Path("/{id}/bid")
@@ -67,14 +64,8 @@ public class BidResource {
     public String create(@CookieParam("scc:session") Cookie session, Bid bid)
             throws Exception {
 
-        /**
-         * TODO
-         * REALLY IMPORTANT -->>> ACTUAL BID HAS TO BE GREATER THAT THE WINNING BID AT
-         * THE MOMENT
-         * IF WINNING BID IS CURRENTLY NULL (-> WINNING BID = BID.GETVALUE())
-         */
         users.checkCookieUser(session, bid.getUserId());
-       
+
         String result = checkBid(bid);
 
         if (result != null)
@@ -89,20 +80,19 @@ public class BidResource {
                 return AUCTION_NOT_EXISTS;
 
             auction = newAuction.toAuction();
-        } else 
+        } else
             auction = mapper.readValue(res, Auction.class); // Auction
-        
-    
-        if(auction.getWinningBid() != null && auction.getWinningBid().getAmount() >= bid.getAmount())
+
+        if (auction.getWinningBid() != null && auction.getWinningBid().getAmount() >= bid.getAmount())
             return LOWER_BIDVALUE;
 
         if (auction.getOwnerId().equals(bid.getUserId()))
             return SAME_OWNER;
-        
-        if(!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
+
+        if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
             return AUCTION_NOT_OPEN;
-        
-        if(bid.getAmount() < auction.getMinPrice())
+
+        if (bid.getAmount() < auction.getMinPrice())
             return LOWER_THAN_MIN_VALUE;
 
         // Updates the auction in the database
@@ -122,8 +112,6 @@ public class BidResource {
 
     }
 
-
-    // Another one that we have to decide wether we want this info on cache or not.
     /**
      * Get all the bids for this auction.
      */
@@ -146,49 +134,21 @@ public class BidResource {
         return bids;
     }
 
-    // --------------------------------------------------------- PRIVATE METHODS
-    // ------------------------------------
-    /* 
-    private boolean userExistsInDB(String userId) {
-        CosmosPagedIterable<UserDAO> usersIt = db_instance.getUserById(userId);
-        return usersIt.iterator().hasNext();
-    }
-    */
+    // PRIVATE METHODS
+
+    /*
+     * Returns auctions from DB with auctionId or null
+     * 
+     */
     private AuctionDAO getAuctionInDB(String auctionId) {
         CosmosPagedIterable<AuctionDAO> auctionIt = db_instance.getAuctionById(auctionId);
-        if(auctionIt.iterator().hasNext())
+        if (auctionIt.iterator().hasNext())
             return auctionIt.iterator().next();
-        else 
-            return null;
+        return null;
     }
 
     /**
-     * private boolean userExistsInRedis(String userId) {
-     * String res = jedis_instance.get("user:" + userId);
-     * 
-     * try {
-     * User redis_user = mapper.readValue(res, User.class);
-     * return redis_user != null;
-     * } catch (JsonProcessingException e) {
-     * // TODO Auto-generated catch block
-     * e.printStackTrace();
-     * }
-     * return false;
-     * }
-     * 
-     * 
-     * private boolean auctionExistsInRedis(String auctionId) {
-     * String res = jedis_instance.get("auction:" + auctionId);
-     * 
-     * try {
-     * Auction redis_auction = mapper.readValue(res, Auction.class);
-     * return redis_auction != null;
-     * } catch (JsonProcessingException e) {
-     * // TODO Auto-generated catch block
-     * e.printStackTrace();
-     * }
-     * return false;
-     * }
+     * Checks if a bid is valid
      * 
      * 
      * @throws IllegalAccessException
@@ -203,7 +163,7 @@ public class BidResource {
         String res = jedis_instance.get("bid:" + bid.getId());
         if (res != null)
             return BID_ALREADY_EXISTS;
-        else if(db_instance.getBidById(bid.getId()).iterator().hasNext())
+        else if (db_instance.getBidById(bid.getId()).iterator().hasNext())
             return BID_ALREADY_EXISTS;
 
         // verify that fields are different from null
@@ -212,18 +172,9 @@ public class BidResource {
             if (f.get(bid) == null)
                 return String.format(NULL_FIELD_EXCEPTION, f.getName());
         }
-        
+
         if (bid.getAmount() <= 0)
             return NEGATIVE_VALUE;
-
-        /* 
-        Verification not necessary because of the user is authentication verification
-
-        if (!userExistsInDB(bid.getUserId()))
-            return USER_NOT_EXISTS;
-        */
-
-        // this does not make sense we're only doing this for the moment
 
         return null;
     }

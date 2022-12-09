@@ -1,27 +1,25 @@
 package scc.srv.resources;
 
 import scc.cache.RedisCache;
-import scc.cosmosdb.CosmosDBLayer;
-import scc.cosmosdb.models.AuctionDAO;
-import scc.cosmosdb.models.PopularAuctionDAO;
-import scc.cosmosdb.models.RecentAuctionDAO;
+import scc.srv.dataclasses.Bid;
 import scc.srv.MainApplication;
+import scc.cosmosdb.CosmosDBLayer;
 import scc.srv.dataclasses.Auction;
+import scc.cosmosdb.models.AuctionDAO;
 import scc.srv.dataclasses.AuctionStatus;
-import jakarta.ws.rs.*;
+import scc.cosmosdb.models.RecentAuctionDAO;
+import scc.cosmosdb.models.PopularAuctionDAO;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Set;
 import java.util.List;
+import jakarta.ws.rs.*;
+import java.util.Iterator;
+import java.util.ArrayList;
 import java.lang.reflect.Field;
+import jakarta.ws.rs.core.Cookie;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.ws.rs.core.Cookie;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import scc.srv.dataclasses.Bid;
 
 /**
  * Resource for managing auction.
@@ -29,29 +27,23 @@ import scc.srv.dataclasses.Bid;
 @Path("/auction")
 public class AuctionsResource {
 
-    private static CosmosDBLayer db_instance;
-    private static Jedis jedis_instance;
-    private ObjectMapper mapper;
-
     private MediaResource media;
     private UsersResource users;
+    private static Jedis jedis_instance;
+    private static CosmosDBLayer db_instance;
 
     private static final String AUCTION_NULL = "Null auction exception";
-    private static final String AUCTION_NOT_EXIST = "Auction does not exist";
     private static final String USER_NOT_EXIST = "User does not exist";
     private static final String IMG_NOT_EXIST = "Image does not exist";
     private static final String INVALID_STATUS = "Invalid auction status";
-    private static final String AUCTION_ALREADY_EXISTS = "AuctionId already exists";
-
     private static final String NULL_FIELD_EXCEPTION = "Null %s exception";
+    private static final String AUCTION_NOT_EXIST = "Auction does not exist";
+    private static final String AUCTION_ALREADY_EXISTS = "AuctionId already exists";
     private static final String NEGATIVE_MINPRICE = "minPrice can not be negative or zero";
-    private static final int DEFAULT_REDIS_EXPIRE = 600;
 
     public AuctionsResource() {
         db_instance = CosmosDBLayer.getInstance();
         jedis_instance = RedisCache.getCachePool().getResource();
-        mapper = new ObjectMapper();
-
         for (Object resource : MainApplication.getSingletonsSet()) {
             if (resource instanceof MediaResource)
                 media = (MediaResource) resource;
@@ -92,14 +84,6 @@ public class AuctionsResource {
         // Status special verification when creating an auction
         if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
             result = INVALID_STATUS;
-
-        // Create the user to store in the database and cache
-        try {
-            jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE,
-                    mapper.writeValueAsString(auction));
-        } catch (Exception e) {
-            // TODO: handle exception
-        }
 
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.putAuction(dbAuction);
@@ -147,16 +131,6 @@ public class AuctionsResource {
         if (!db_instance.getAuctionById(auction.getId()).iterator().hasNext())
             return AUCTION_NOT_EXIST;
 
-        try {
-            String res = jedis_instance.get("auction:" + auction.getId());
-            if (res != null) {
-                jedis_instance.setex("auction:" + auction.getId(), DEFAULT_REDIS_EXPIRE,
-                        mapper.writeValueAsString(auction));
-            }
-        } catch (Exception e) {
-            // TODO: handle exception
-        }
-
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.updateAuction(dbAuction);
         return dbAuction.getId();
@@ -188,7 +162,6 @@ public class AuctionsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> popularAuctionsList() {
-        // AUTH ?
 
         List<String> list = new ArrayList<>();
 
@@ -204,7 +177,6 @@ public class AuctionsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> openAuctionsUserList() {
-        // AUTH ??
 
         List<String> list = new ArrayList<>();
 
@@ -215,8 +187,23 @@ public class AuctionsResource {
         return list;
     }
 
-    // ----------------------------------------------------- PRIVATE METHODS
-    // ---------------------------------------------
+    @Path("/any/aboutclose")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> auctionsAboutToClose() {
+
+        List<String> list = new ArrayList<>();
+
+        Set<String> auctions = jedis_instance.keys("auction:*");
+
+        Iterator<String> it = auctions.iterator();
+        while (it.hasNext())
+            list.add(it.next());
+
+        return list;
+    }
+
+    // PRIVATE METHODS
 
     private boolean isValidStatus(String status) {
         return ((status.equals(AuctionStatus.OPEN.getStatus()) ||

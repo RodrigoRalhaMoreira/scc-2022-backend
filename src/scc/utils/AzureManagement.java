@@ -497,7 +497,6 @@ public class AzureManagement {
 					th.start();
 					threads.add(th);
 				}
-
 			}
 			for (Thread th : threads) {
 				th.join();

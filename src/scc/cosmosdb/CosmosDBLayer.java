@@ -23,9 +23,9 @@ import scc.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.AuctionStatus;
 
 public class CosmosDBLayer {
-	private static final String CONNECTION_URL = "https://scc23groupdrt.documents.azure.com:443/";
-	private static final String DB_KEY = "nNaQx90GgUrilUlFIx9N1B7zv8wzblpSczL4IGGbFNIt5Q2YiOImwWUxIwieZmXbE3ELDhKSDSlbACDbwYwY4A==";
-	private static final String DB_NAME = "scc23dbgroupdrt";
+	private static final String CONNECTION_URL = "https://tiagoduarte25.documents.azure.com:443/";
+	private static final String DB_KEY = "2OaqfBxw7Yrc1cKC6DK7SMmhiUBhF7wnFWppftLgFWMfZROg5iyYuRxI0LUsCXyhcas7et2Rrb9sACDbNBTB9w==";
+	private static final String DB_NAME = "ToDoList";
 
 	private static CosmosDBLayer instance;
 
@@ -48,13 +48,13 @@ public class CosmosDBLayer {
 
 	}
 
-	private CosmosClient client;
 	private CosmosDatabase db;
-	private CosmosContainer users;
-	private CosmosContainer questions;
-	private CosmosContainer auctions;
+	private CosmosClient client;
 	private CosmosContainer bids;
 	private CosmosContainer login;
+	private CosmosContainer users;
+	private CosmosContainer auctions;
+	private CosmosContainer questions;
 	private CosmosContainer popularAuctions;
 	private CosmosContainer recentAuctions;
 
@@ -239,7 +239,7 @@ public class CosmosDBLayer {
 				RecentAuctionDAO.class);
 	}
 
-	public CosmosPagedIterable<AuctionDAO> getCloseAuctions() {
+	public void closeAuctions() {
 		init();
 		CosmosPagedIterable<AuctionDAO> cpi = auctions.queryItems(
 				"SELECT * FROM auctions WHERE auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\""
@@ -252,6 +252,14 @@ public class CosmosDBLayer {
 			auction.setStatus(AuctionStatus.CLOSE.getStatus());
 			auctions.upsertItem(auction);
 		}
-		return cpi;
+	}
+
+	public CosmosPagedIterable<AuctionDAO> getAuctionsAboutToClose() {
+		init();
+		return auctions.queryItems(
+				"SELECT * FROM auctions WHERE auctions.status=\"" + AuctionStatus.OPEN.getStatus() + "\""
+						+ "AND auctions.endTime <= (GetCurrentTimestamp() + 86400)",
+				new CosmosQueryRequestOptions(),
+				AuctionDAO.class);
 	}
 }
