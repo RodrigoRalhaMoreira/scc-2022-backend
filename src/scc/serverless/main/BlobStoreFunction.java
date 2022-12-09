@@ -1,4 +1,4 @@
-package scc.serverless.main;
+/*package scc.serverless.main;
 
 import com.microsoft.azure.functions.annotation.*;
 
@@ -8,7 +8,7 @@ import com.microsoft.azure.functions.*;
 
 /**
  * Azure Functions with Blob Trigger.
- */
+ 
 public class BlobStoreFunction {
 	@FunctionName("blobGeoReplication")
 	public void setLastBlobInfo(
@@ -22,4 +22,4 @@ public class BlobStoreFunction {
 		MediaResource media_instance = new MediaResource(connectionString);
 		media_instance.upload(content);
 	}
-}
+} */

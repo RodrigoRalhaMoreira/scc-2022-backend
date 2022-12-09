@@ -4,7 +4,7 @@ import scc.utils.Hash;
 
 import jakarta.ws.rs.*;
 import java.util.List;
-
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -39,7 +39,7 @@ public class MediaResource {
             return ERROR_MSG;
 
         String filename = Hash.of(contents);
-        String path = System.getenv("azure-managed-disk") + "/filename";
+        String path = System.getenv("azure-managed-disk") + "/" + filename;
         try (FileOutputStream stream = new FileOutputStream(path)) {
             stream.write(contents);
         }
@@ -58,7 +58,7 @@ public class MediaResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public byte[] download(@PathParam("id") String id) throws IOException {
         byte[] bytes = null;
-        String path = System.getenv("azure-managed-disk") + "/id";
+        String path = System.getenv("azure-managed-disk") + "/"+ id;
         try (FileInputStream stream = new FileInputStream(path)) {
             bytes = stream.readAllBytes();
         }
@@ -75,6 +75,10 @@ public class MediaResource {
     public List<String> list() {
 
         List<String> list = new ArrayList<>();
+        String dir = System.getenv("azure-managed-disk");
+        String[] dirs = (new File(dir)).list();
+        for(String id: dirs)
+            list.add(id);
         /*
          * try {
          * 
@@ -90,7 +94,7 @@ public class MediaResource {
          * e.printStackTrace();
          * }
          */
-        return null;
+        return list;
     }
 
     public boolean verifyImgId(String ImgId) {
