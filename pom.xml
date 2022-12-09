@@ -166,8 +166,8 @@
               </resource> 
             </resources> 
           </deployment>  
-          <resourceGroup>scc-backend-drt</resourceGroup>  
-          <appName>scc-backend-drt</appName> 
+          <resourceGroup>scc-backend-rg-58763-54123-45128</resourceGroup>
+          <appName>scc2223-backend-drt</appName>
         </configuration> 
       </plugin> 
 	  <plugin>

@@ -61,7 +61,7 @@ public class AuctionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Auction auction)
+    public Auction create(@CookieParam("scc:session") Cookie session, Auction auction)
             throws IllegalArgumentException, IllegalAccessException {
 
         // Winning bids start by default with the value of null
@@ -69,17 +69,16 @@ public class AuctionsResource {
             users.checkCookieUser(session, auction.getOwnerId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
         }
 
         String result = checkAuction(auction);
 
         if (result != null)
-            return result;
+            return null;
 
         String res = jedis_instance.get("auction:" + auction.getId());
         if (res != null)
-            return AUCTION_ALREADY_EXISTS;
+            return null;
 
         // Status special verification when creating an auction
         if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
@@ -87,7 +86,7 @@ public class AuctionsResource {
 
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.putAuction(dbAuction);
-        return dbAuction.getTitle();
+        return auction;
     }
 
     /**

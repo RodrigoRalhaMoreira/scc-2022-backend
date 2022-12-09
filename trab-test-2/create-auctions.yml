@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
+  target: 'http://20.103.34.28/rest'
   http:
     timeout: 10
   plugins:
@@ -61,6 +61,7 @@ scenarios:
                 as: "auctionId"
               - json: $.ownerId
                 as: "auctionUser"
+            afterResponse: "genNewAuctionReply"
         - loop:                          # Let's add numBids bids to the auction
           - function: "selectUserSkewed"
           - function: "genNewBid"
