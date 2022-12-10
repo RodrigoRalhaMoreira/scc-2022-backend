@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
+  target: 'http://20.86.233.8/rest'
   http:
     timeout: 10
   plugins:
@@ -27,16 +27,6 @@ scenarios:
           json:
             user: "{{ user }}"
             pwd: "{{ pwd }}"
-      - get:                          # Get info for initial page (assuming recent + popular)
-          url: "/auction/any/popular?st=0&len=20"
-          name: "GET:/auction/any/popular"
-          headers:
-            Accept: application/json
-      - get:                          # Get info for initial page (assuming recent + popular)
-          url: "/auction/any/recent?st=0&len=20"
-          name: "GET:/auction/any/recent"
-          headers:
-            Accept: application/json
       - get:                          # Get user auctions
           url: "/user/{{ user }}/auctions?status=\"OPEN\""
           name: "GET:/user/*/auctions"
@@ -64,16 +54,6 @@ scenarios:
             capture: 
               json: "$"
               as: "questionOne"
-        - function: "decideToReply"
-        - post:                          # New reply     
-            url: "/auction/{{ $loopElement.id }}/question/{{ questionOne.id }}/reply"
-            name: "ªPOST:/auction/*/question/*/reply"
-            headers:
-              Content-Type: application/json
-              Accept: application/json
-            json:
-              reply: "{{ reply }}"
-            ifTrue: "reply"
         over: "auctionsLst"
 
   - name: 'User check following auctions'
@@ -88,16 +68,6 @@ scenarios:
           json:
             user: "{{ user }}"
             pwd: "{{ pwd }}"
-      - get:                          # Get info for initial page (assuming recent + popular)
-          url: "/auction/any/popular?st=0&len=20"
-          name: "GET:/auction/any/popular"
-          headers:
-            Accept: application/json
-      - get:                          # Get info for initial page (assuming recent + popular)
-          url: "/auction/any/recent?st=0&len=20"
-          name: "GET:/auction/any/recent"
-          headers:
-            Accept: application/json
       - get:                          # Get following auctions
           url: "/user/{{ user }}/following"
           name: "GET:/user/*/following"
@@ -147,50 +117,7 @@ scenarios:
             user: "{{ user }}"
             pwd: "{{ pwd }}"
       - loop:                                  
-        - get:                          # Get info for initial page (assuming recent + popular)
-            url: "/auction/any/popular?st=0&len=20"
-            name: "GET:/auction/any/popular"
-            headers:
-              Accept: application/json
-            capture: 
-              json: "$"
-              as: "popularLst"
-        - get:                          # Get info for initial page (assuming recent + popular)
-            url: "/auction/any/recent?st=0&len=20"
-            name: "GET:/auction/any/recent"
-            headers:
-              Accept: application/json
-            capture: 
-              json: "$"
-              as: "recentLst"
         - function: "decideNextAction"
-        - get:                          # Browse next page of popular
-            url: "/auction/any/popular?st=20&len=20"
-            name: "GET:/auction/any/popular"
-            headers:
-              Accept: application/json
-            capture: 
-              json: "$"
-              as: "auctionsLst"
-            ifTrue: "nextAction == 0"
-        - get:                          # Browse next page of recent
-            url: "/auction/any/recent?st=20&len=20"
-            name: "GET:/auction/any/recent"
-            headers:
-              Accept: application/json
-            capture: 
-              json: "$"
-              as: "auctionsLst"
-            ifTrue: "nextAction == 1"
-        - get:                          # Browse next page of recent
-            url: "/auction/any/recent?st=20&len=20"
-            name: "GET:/auction/any/recent"
-            headers:
-              Accept: application/json
-            capture: 
-              json: "$"
-              as: "auctionsLst"
-            ifTrue: "nextAction == 1"
         - get:                          # Get user auctions
             url: "/user/{{ user2 }}/auctions?status=\"OPEN\""
             name: "GET:/user/*/auctions"
@@ -220,11 +147,12 @@ scenarios:
             json:
               description: "{{ description }}"
               title: "{{ title }}"
-              owner: "{{ user }}"
-              imageId: "{{ imageId }}"
+              ownerId: "{{ user }}"
+              imgId: "{{ imageId }}"
               endTime: "{{ endTime }}"
-              minimumPrice: "{{ minimumPrice }}"
+              minPrice: "{{ minimumPrice }}"
               status: "{{ status }}"
+              winningBid: "{{ winningBid }}"
             ifTrue: "nextAction == 3"
         - get:                          # Call methods for displaying auction: image, top bid, messages
             url: "/media/{{ imageId }}"
