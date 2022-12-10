@@ -65,16 +65,8 @@ public class BidResource {
             throws Exception {
 
 
-        try {
-            users.checkCookieUser(session, bid.getUserId());
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-        }
-        
-        String result = checkBid(bid);
-
-        if (result != null)
-            return null;
+        // users.checkCookieUser(session, bid.getUserId());
+        checkBid(bid);
 
         String res = jedis_instance.get("auction:" + bid.getAuctionId());
         Auction auction;
@@ -82,23 +74,23 @@ public class BidResource {
             AuctionDAO newAuction = getAuctionInDB(bid.getAuctionId());
 
             if (newAuction == null)
-                return null;
+                throw new Exception("Without Auction");
 
             auction = newAuction.toAuction();
         } else
             auction = mapper.readValue(res, Auction.class); // Auction
 
         if (auction.getWinningBid() != null && auction.getWinningBid().getAmount() >= bid.getAmount())
-            return null;
+            throw new Exception("Invalid Amount");
 
         if (auction.getOwnerId().equals(bid.getUserId()))
-            return null;
+            throw new Exception("Same user");
 
         if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
-            return null;
+            throw new Exception("Auction Closed");
 
         if (bid.getAmount() < auction.getMinPrice())
-            return null;
+            throw new Exception("Invalid Amount 2");
 
         // Updates the auction in the database
         auction.setWinningBid(bid);
@@ -160,27 +152,25 @@ public class BidResource {
      * @throws IllegalArgumentException
      **/
 
-    private String checkBid(Bid bid) throws IllegalArgumentException, IllegalAccessException {
+    private void checkBid(Bid bid) throws IllegalArgumentException, IllegalAccessException, Exception {
 
         if (bid == null)
-            return BID_NULL;
+            throw new Exception("Bid null");
 
         String res = jedis_instance.get("bid:" + bid.getId());
         if (res != null)
-            return BID_ALREADY_EXISTS;
-        else if (db_instance.getBidById(bid.getId()).iterator().hasNext())
-            return BID_ALREADY_EXISTS;
-
+            throw new Exception(res + "WTF");
+        if (db_instance.getBidById(bid.getId()).iterator().hasNext())
+            throw new Exception(res + "BLABLABLA");
         // verify that fields are different from null
         for (Field f : bid.getClass().getDeclaredFields()) {
             f.setAccessible(true);
             if (f.get(bid) == null)
-                return String.format(NULL_FIELD_EXCEPTION, f.getName());
+                throw new Exception(String.format(NULL_FIELD_EXCEPTION, f.getName()));
+            ;
         }
 
         if (bid.getAmount() <= 0)
-            return NEGATIVE_VALUE;
-
-        return null;
+            throw new Exception(NEGATIVE_VALUE);
     }
 }

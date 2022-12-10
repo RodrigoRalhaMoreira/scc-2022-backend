@@ -58,31 +58,26 @@ public class QuestionsResource {
     /**
      * Creates a new question.
      * 
-     * @throws JsonProcessingException
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
+     * @throws Exception
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Question create(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId)
-            throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
-        
-        try {
-            users.checkCookieUser(session, question.getUserId());
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            return null;
-        } /**
+            throws Exception {
 
-        String error = checkQuestion(question);
+        // try {
+        // users.checkCookieUser(session, question.getUserId());
+        // } catch (Exception e) {
+        // // TODO Auto-generated catch block
+        // throw new Exception("COOKIE QUESTION");
+        // }
 
-        if (error != null)
-            return null;
-        
-        if (getAuctionOwner(auctionId).equals(question.getUserId()))
-            return null;  **/
+        checkQuestion(question);
+
+        // if (getAuctionOwner(auctionId).equals(question.getUserId()))
+        // return null;
 
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
@@ -127,10 +122,7 @@ public class QuestionsResource {
     /**
      * Reply to a question.
      * 
-     * @throws JsonProcessingException
-     * @throws JsonMappingException
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
+     * @throws Exception
      */
     @Path("/{id}/reply")
     @POST
@@ -138,19 +130,16 @@ public class QuestionsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Question reply(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId, @PathParam("id") String questionId)
-            throws JsonMappingException, JsonProcessingException, IllegalArgumentException, IllegalAccessException {
-/**
+            throws Exception {
+
         try {
             users.checkCookieUser(null, question.getUserId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
+            throw new Exception("COOKIE REPLY QUESTION");
         }
-**/
-        String error = checkQuestion(question);
 
-        if (error != null)
-            return null;
+        checkQuestion(question);
 
         if (!question.getUserId().equals(getAuctionOwner(auctionId)))
             return null;
@@ -227,28 +216,26 @@ public class QuestionsResource {
         return auctionIt.iterator().hasNext();
     }
 
-    private String checkQuestion(Question question) throws IllegalArgumentException, IllegalAccessException {
+    private void checkQuestion(Question question) throws Exception {
 
         if (question == null)
-            return QUESTION_NULL;
+            throw new Exception("Question null");
 
         if (questionExistsInDB(question.getId()))
-            return ALREADY_EXISTS_DB;
+            throw new Exception("Question exists in db");
 
         // verify that fields are different from null
         for (Field f : question.getClass().getDeclaredFields()) {
             f.setAccessible(true);
             if (f.get(question) == null && !f.getName().equals("reply"))
-                return String.format(NULL_FIELD_EXCEPTION, f.getName());
+                throw new Exception(String.format(NULL_FIELD_EXCEPTION, f.getName()));
         }
 
         if (!userExistsInDB(question.getUserId()))
-            return USER_NOT_EXISTS;
+            throw new Exception("User not exists in db");
 
         // this does not make sense we're only doing this for the moment
         if (!auctionExistsInDB(question.getAuctionId()))
-            return AUCTION_NOT_EXISTS;
-
-        return null;
+            throw new Exception("AUCTION not exists in db");
     }
 }
