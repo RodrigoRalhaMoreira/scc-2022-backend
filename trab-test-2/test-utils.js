@@ -221,6 +221,8 @@ function genNewAuction(context, events, done) {
 }
 
 function genNewAuctionReply(requestParams, response, context, ee, next) {
+	//extractCookie(requestParams, response, context, ee, next);
+	console.log("\n\n\nRESPOSTA: "+ response.body);
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
 		let a = JSON.parse(response.body)
 		auctions.push(a)
@@ -239,7 +241,7 @@ function genNewBidReply(requestParams, response, context, ee, next) {
 }
 
 function genNewQuestionR(requestParams, response, context, ee, next) {
-	console.log("\n\n\nRESPOSTA: "+ response.body.length);
+	console.log("\n\n\nRESPOSTA: "+ response.body);
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
 		let a = JSON.parse(response.body)
 		questions.push(a)
@@ -249,6 +251,7 @@ function genNewQuestionR(requestParams, response, context, ee, next) {
 }
 
 function genNewQuestionReplyR(requestParams, response, context, ee, next) {
+	console.log("\n\n\nRESPOSTA: "+ response.body.length);
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
 		let a = JSON.parse(response.body)
 		replies.push(a)

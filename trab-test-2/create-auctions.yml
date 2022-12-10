@@ -64,7 +64,6 @@ scenarios:
             afterResponse: "genNewAuctionReply"
         - loop:                          # Let's add numBids bids to the auction
           - function: "selectUserSkewed"
-          - function: "genNewBid"
           - post:                         
               url: "/user/auth"
               name: "POST:/user/auth"
@@ -73,6 +72,7 @@ scenarios:
               json:
                 user: "{{ user }}"
                 pwd: "{{ pwd }}"
+          - function: "genNewBid"
           - post:                          # New bid     
               url: "/auction/{{ auctionId }}/bid"
               name: "POST:/auction/*/bid"
@@ -85,10 +85,9 @@ scenarios:
                 amount: "{{ value }}"
                 id: "{{ id }}" # NEW
               afterResponse: "genNewBidReply"
-        count: "{{ numBids }}"   
-      - loop:                          # Let's add numQuestions questions to the auction
+          count: "{{ numBids }}"   
+        - loop:                          # Let's add numQuestions questions to the auction
           - function: "selectUserSkewed"
-          - function: "genNewQuestion"
           - post:                         
               url: "/user/auth"
               name: "POST:/user/auth"
@@ -97,6 +96,7 @@ scenarios:
               json:
                 user: "{{ user }}"
                 pwd: "{{ pwd }}"
+          - function: "genNewQuestion"
           - post:                          # New question     
               url: "/auction/{{ auctionId }}/question"
               name: "POST:/auction/*/question"
@@ -137,6 +137,6 @@ scenarios:
                 reply: "{{ reply }}"
               afterResponse: "genNewQuestionReplyR"
               ifTrue: "reply"
-        count: "{{ numQuestions }}"   
-    count: "{{ numAuctions }}"
+          count: "{{ numQuestions }}"   
+        count: "{{ numAuctions }}"
 
