@@ -6,9 +6,6 @@ import redis.clients.jedis.JedisPoolConfig;
 public class RedisCache {
 	private static final String RedisHostname = System.getenv("redis");
 
-	// private static final String RedisKey =
-	// "NxvshIdAYlZKTmNMLPXsAkFzykHbllbodAzCaG1aILk=";
-
 	private static JedisPool instance;
 
 	public synchronized static JedisPool getCachePool() {

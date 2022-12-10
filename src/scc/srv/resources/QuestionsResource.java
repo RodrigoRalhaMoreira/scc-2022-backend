@@ -58,38 +58,33 @@ public class QuestionsResource {
     /**
      * Creates a new question.
      * 
-     * @throws JsonProcessingException
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
+     * @throws Exception
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Question question,
+    public Question create(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId)
-            throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+            throws Exception {
 
-        try {
-            users.checkCookieUser(session, question.getUserId());
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            return e.getMessage();
-        }
+        // try {
+        // users.checkCookieUser(session, question.getUserId());
+        // } catch (Exception e) {
+        // // TODO Auto-generated catch block
+        // throw new Exception("COOKIE QUESTION");
+        // }
 
-        String error = checkQuestion(question);
+        checkQuestion(question);
 
-        if (error != null)
-            return error;
-
-        if (getAuctionOwner(auctionId).equals(question.getUserId()))
-            return SAME_OWNER;
+        // if (getAuctionOwner(auctionId).equals(question.getUserId()))
+        // return null;
 
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
         jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
 
         db_instance.putQuestion(dbquestion);
-        return dbquestion.getMessage();
+        return question;
     }
 
     @GET
@@ -132,33 +127,27 @@ public class QuestionsResource {
     /**
      * Reply to a question.
      * 
-     * @throws JsonProcessingException
-     * @throws JsonMappingException
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
+     * @throws Exception
      */
     @Path("/{id}/reply")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String reply(@CookieParam("scc:session") Cookie session, Question question,
+    public Question reply(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId, @PathParam("id") String questionId)
-            throws JsonMappingException, JsonProcessingException, IllegalArgumentException, IllegalAccessException {
+            throws Exception {
 
         try {
             users.checkCookieUser(null, question.getUserId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
+            throw new Exception("COOKIE REPLY QUESTION");
         }
 
-        String error = checkQuestion(question);
-
-        if (error != null)
-            return null;
+        checkQuestion(question);
 
         if (!question.getUserId().equals(getAuctionOwner(auctionId)))
-            return ONLY_OWNER_ERROR;
+            return null;
 
         Question questioned = getQuestionById(questionId);
 
@@ -166,7 +155,7 @@ public class QuestionsResource {
         String newReply = question.getMessage();
 
         if (reply != null)
-            return REPLY_ALREADY_DONE;
+            return null;
 
         // Updates the question in redis with the new reply and stores the new question
         // (reply)
@@ -189,9 +178,9 @@ public class QuestionsResource {
         dbQuestion.setReply(newReply);
         db_instance.updateQuestion(dbQuestion);
 
-        QuestionDAO dbReply = new QuestionDAO(question);
-        db_instance.putQuestion(dbReply);
-        return dbReply.getMessage();
+        // QuestionDAO dbReply = new QuestionDAO(question);
+        // db_instance.putQuestion(dbReply);
+        return dbQuestion.toQuestion();
     }
 
     // PRIVATE METHODS
@@ -232,28 +221,26 @@ public class QuestionsResource {
         return auctionIt.iterator().hasNext();
     }
 
-    private String checkQuestion(Question question) throws IllegalArgumentException, IllegalAccessException {
+    private void checkQuestion(Question question) throws Exception {
 
         if (question == null)
-            return QUESTION_NULL;
+            throw new Exception("Question null");
 
         if (questionExistsInDB(question.getId()))
-            return ALREADY_EXISTS_DB;
+            throw new Exception("Question exists in db");
 
         // verify that fields are different from null
         for (Field f : question.getClass().getDeclaredFields()) {
             f.setAccessible(true);
             if (f.get(question) == null && !f.getName().equals("reply"))
-                return String.format(NULL_FIELD_EXCEPTION, f.getName());
+                throw new Exception(String.format(NULL_FIELD_EXCEPTION, f.getName()));
         }
 
         if (!userExistsInDB(question.getUserId()))
-            return USER_NOT_EXISTS;
+            throw new Exception("User not exists in db");
 
         // this does not make sense we're only doing this for the moment
         if (!auctionExistsInDB(question.getAuctionId()))
-            return AUCTION_NOT_EXISTS;
-
-        return null;
+            throw new Exception("AUCTION not exists in db");
     }
 }

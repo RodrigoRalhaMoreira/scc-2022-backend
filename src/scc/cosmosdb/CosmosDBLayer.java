@@ -23,9 +23,15 @@ import scc.cosmosdb.models.UserDAO;
 import scc.srv.dataclasses.AuctionStatus;
 
 public class CosmosDBLayer {
-	private static final String CONNECTION_URL = "https://tiagoduarte25.documents.azure.com:443/";
-	private static final String DB_KEY = "2OaqfBxw7Yrc1cKC6DK7SMmhiUBhF7wnFWppftLgFWMfZROg5iyYuRxI0LUsCXyhcas7et2Rrb9sACDbNBTB9w==";
-	private static final String DB_NAME = "ToDoList";
+	// private static final String CONNECTION_URL =
+	// "https://tiagoduarte25.documents.azure.com:443/";
+	// private static final String DB_KEY =
+	// "2OaqfBxw7Yrc1cKC6DK7SMmhiUBhF7wnFWppftLgFWMfZROg5iyYuRxI0LUsCXyhcas7et2Rrb9sACDbNBTB9w==";
+	// private static final String DB_NAME = "ToDoList";
+
+	private static final String CONNECTION_URL = "https://scc22235.documents.azure.com:443/";
+	private static final String DB_KEY = "LTtd6QsAm0SN4X56YVCvoYGPquvr1KAuPi5UFoiDD6g0oDgTvrTpH56T4R5qo046xm8UYzbNwFtFePvJuTdNJg==";
+	private static final String DB_NAME = "container";
 
 	private static CosmosDBLayer instance;
 
@@ -135,7 +141,7 @@ public class CosmosDBLayer {
 
 	public CosmosPagedIterable<BidDAO> getBidById(String id) {
 		init();
-		return auctions.queryItems("SELECT * FROM bids WHERE bids.id=\"" + id + "\"",
+		return bids.queryItems("SELECT * FROM bids WHERE bids.id=\"" + id + "\"",
 				new CosmosQueryRequestOptions(),
 				BidDAO.class);
 	}
