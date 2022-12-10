@@ -14,13 +14,13 @@ public class Bid {
     @JsonProperty("userId")
     private String userId;
     @JsonProperty("amount")
-    private int amount;
+    private float amount;
 
     public Bid() {
         super();
     }
 
-    public Bid(String id, String auctionId, String userId, int amount) {
+    public Bid(String id, String auctionId, String userId, float amount) {
         this.id = id;
         this.auctionId = auctionId;
         this.userId = userId;
@@ -39,7 +39,7 @@ public class Bid {
         return userId;
     }
 
-    public int getAmount() {
+    public float getAmount() {
         return amount;
     }
 

@@ -61,15 +61,15 @@ public class BidResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Bid bid)
+    public Bid create(@CookieParam("scc:session") Cookie session, Bid bid)
             throws Exception {
 
-        users.checkCookieUser(session, bid.getUserId());
+        // users.checkCookieUser(session, bid.getUserId());
 
         String result = checkBid(bid);
 
         if (result != null)
-            return result;
+            return null;
 
         String res = jedis_instance.get("auction:" + bid.getAuctionId());
         Auction auction;
@@ -77,23 +77,23 @@ public class BidResource {
             AuctionDAO newAuction = getAuctionInDB(bid.getAuctionId());
 
             if (newAuction == null)
-                return AUCTION_NOT_EXISTS;
+                return null;
 
             auction = newAuction.toAuction();
         } else
             auction = mapper.readValue(res, Auction.class); // Auction
 
         if (auction.getWinningBid() != null && auction.getWinningBid().getAmount() >= bid.getAmount())
-            return LOWER_BIDVALUE;
+            return null;
 
         if (auction.getOwnerId().equals(bid.getUserId()))
-            return SAME_OWNER;
+            return null;
 
         if (!auction.getStatus().equals(AuctionStatus.OPEN.getStatus()))
-            return AUCTION_NOT_OPEN;
+            return null;
 
         if (bid.getAmount() < auction.getMinPrice())
-            return LOWER_THAN_MIN_VALUE;
+            return null;
 
         // Updates the auction in the database
         auction.setWinningBid(bid);
@@ -108,7 +108,7 @@ public class BidResource {
         // Create the bid to store in the database
         BidDAO dbbid = new BidDAO(bid);
         db_instance.putBid(dbbid);
-        return dbbid.getId();
+        return bid;
 
     }
 

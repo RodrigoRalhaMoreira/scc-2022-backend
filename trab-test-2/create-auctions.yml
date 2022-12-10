@@ -7,8 +7,8 @@ config:
       useOnlyRequestNames: true  # new mode to aggregate metrics in artillery
   processor: "./test-utils.js"
   variables:
-    numAuctions : 5
-    maxBids : 3  # maximum number of bids to generate for each new auction
+    numAuctions : 3
+    maxBids : 2  # maximum number of bids to generate for each new auction
     maxQuestions : 2 # maximum number of questions to generate for each new auction
   phases:
   - name: "Create auctions"    # Create channels
@@ -82,10 +82,11 @@ scenarios:
               json:
                 auctionId: "{{ auctionId }}"
                 userId: "{{ user }}"
-                value: "{{ value }}"
+                amount: "{{ value }}"
                 id: "{{ id }}" # NEW
-          count: "{{ numBids }}"   
-        - loop:                          # Let's add numQuestions questions to the auction
+              afterResponse: "genNewBidReply"
+        count: "{{ numBids }}"   
+      - loop:                          # Let's add numQuestions questions to the auction
           - function: "selectUserSkewed"
           - function: "genNewQuestion"
           - post:                         
@@ -111,6 +112,7 @@ scenarios:
               capture:                     # Capturing question id and store it in variable questionId
                 - json: $.id
                   as: "questionId"
+              afterResponse: "genNewQuestionR"
           - function: "genNewQuestionReply"
           - post:                         
               url: "/user/auth"
@@ -133,7 +135,8 @@ scenarios:
                 userId: "{{ user }}"
                 message: "{{ text }}"
                 reply: "{{ reply }}"
+              afterResponse: "genNewQuestionReplyR"
               ifTrue: "reply"
-          count: "{{ numQuestions }}"   
-        count: "{{ numAuctions }}"
+        count: "{{ numQuestions }}"   
+    count: "{{ numAuctions }}"
 

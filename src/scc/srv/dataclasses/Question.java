@@ -19,7 +19,6 @@ public class Question {
     private String message;
     @JsonProperty("reply")
     private String reply;
-
     
     public Question() {
         super();

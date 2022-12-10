@@ -19,6 +19,9 @@ module.exports = {
   decideNextAction,
   random80,
   random50,
+  genNewBidReply,
+  genNewQuestionR,
+  genNewQuestionReplyR
 }
 
 const Faker = require('@faker-js/faker').faker
@@ -28,7 +31,10 @@ const path = require('path')
 var imagesIds = []
 var images = []
 var users = []
+var bids = []
 var auctions = []
+var replies = []
+var questions = []
 
 var auctionIdCounter = 0;
 var bidIdCounter = 0;
@@ -215,11 +221,38 @@ function genNewAuction(context, events, done) {
 }
 
 function genNewAuctionReply(requestParams, response, context, ee, next) {
-	console.log("\n\n\nRESPOSTA: "+ response.body);
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
 		let a = JSON.parse(response.body)
 		auctions.push(a)
 		fs.writeFileSync('auctions.data', JSON.stringify(auctions));
+	}
+    return next()
+}
+
+function genNewBidReply(requestParams, response, context, ee, next) {
+	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
+		let a = JSON.parse(response.body)
+		bids.push(a)
+		fs.writeFileSync('bids.data', JSON.stringify(bids));
+	}
+    return next()
+}
+
+function genNewQuestionR(requestParams, response, context, ee, next) {
+	console.log("\n\n\nRESPOSTA: "+ response.body.length);
+	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
+		let a = JSON.parse(response.body)
+		questions.push(a)
+		fs.writeFileSync('questions.data', JSON.stringify(questions));
+	}
+    return next()
+}
+
+function genNewQuestionReplyR(requestParams, response, context, ee, next) {
+	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
+		let a = JSON.parse(response.body)
+		replies.push(a)
+		fs.writeFileSync('replies.data', JSON.stringify(replies));
 	}
     return next()
 }
@@ -249,6 +282,7 @@ function genNewBid(context, events, done) {
 function genNewQuestion(context, events, done) {
 	context.vars.id = (questionIdCounter++).toString();
 	context.vars.text = `${Faker.lorem.paragraph()}`;
+	context.vars.reply = "";
 	return done()
 }
 

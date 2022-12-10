@@ -65,31 +65,31 @@ public class QuestionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(@CookieParam("scc:session") Cookie session, Question question,
+    public Question create(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId)
             throws JsonProcessingException, IllegalArgumentException, IllegalAccessException {
-
+        
         try {
             users.checkCookieUser(session, question.getUserId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
-        }
+            return null;
+        } /**
 
         String error = checkQuestion(question);
 
         if (error != null)
-            return error;
-
+            return null;
+        
         if (getAuctionOwner(auctionId).equals(question.getUserId()))
-            return SAME_OWNER;
+            return null;  **/
 
         // Create the question to store in the db
         QuestionDAO dbquestion = new QuestionDAO(question);
         jedis_instance.setex("question:" + question.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(question));
 
         db_instance.putQuestion(dbquestion);
-        return dbquestion.getMessage();
+        return question;
     }
 
     @GET
@@ -141,24 +141,24 @@ public class QuestionsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String reply(@CookieParam("scc:session") Cookie session, Question question,
+    public Question reply(@CookieParam("scc:session") Cookie session, Question question,
             @PathParam("id") String auctionId, @PathParam("id") String questionId)
             throws JsonMappingException, JsonProcessingException, IllegalArgumentException, IllegalAccessException {
-
+/**
         try {
             users.checkCookieUser(null, question.getUserId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
             return e.getMessage();
         }
-
+**/
         String error = checkQuestion(question);
 
         if (error != null)
             return null;
 
         if (!question.getUserId().equals(getAuctionOwner(auctionId)))
-            return ONLY_OWNER_ERROR;
+            return null;
 
         Question questioned = getQuestionById(questionId);
 
@@ -166,7 +166,7 @@ public class QuestionsResource {
         String newReply = question.getMessage();
 
         if (reply != null)
-            return REPLY_ALREADY_DONE;
+            return null;
 
         // Updates the question in redis with the new reply and stores the new question
         // (reply)
@@ -189,9 +189,9 @@ public class QuestionsResource {
         dbQuestion.setReply(newReply);
         db_instance.updateQuestion(dbQuestion);
 
-        QuestionDAO dbReply = new QuestionDAO(question);
-        db_instance.putQuestion(dbReply);
-        return dbReply.getMessage();
+        // QuestionDAO dbReply = new QuestionDAO(question);
+        // db_instance.putQuestion(dbReply);
+        return dbQuestion.toQuestion();
     }
 
     // PRIVATE METHODS
