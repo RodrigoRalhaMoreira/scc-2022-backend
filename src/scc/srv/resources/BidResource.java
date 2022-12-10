@@ -158,14 +158,15 @@ public class BidResource {
 
         String res = jedis_instance.get("bid:" + bid.getId());
         if (res != null)
-            throw new Exception(BID_ALREADY_EXISTS);
-        else if (db_instance.getBidById(bid.getId()).iterator().hasNext())
-            throw new Exception(BID_ALREADY_EXISTS);
+            throw new Exception(res + "WTF");
+        if (db_instance.getBidById(bid.getId()).iterator().hasNext())
+            throw new Exception(res + "BLABLABLA");
         // verify that fields are different from null
         for (Field f : bid.getClass().getDeclaredFields()) {
             f.setAccessible(true);
             if (f.get(bid) == null)
-                throw new Exception(String.format(NULL_FIELD_EXCEPTION, f.getName()));;
+                throw new Exception(String.format(NULL_FIELD_EXCEPTION, f.getName()));
+            ;
         }
 
         if (bid.getAmount() <= 0)

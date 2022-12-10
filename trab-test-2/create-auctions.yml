@@ -61,7 +61,6 @@ scenarios:
                 as: "auctionId"
               - json: $.ownerId
                 as: "auctionUser"
-            afterResponse: "genNewAuctionReply"
         - loop:                          # Let's add numBids bids to the auction
           - function: "selectUserSkewed"
           - function: "genNewBid"
@@ -84,7 +83,6 @@ scenarios:
                 userId: "{{ user }}"
                 amount: "{{ value }}"
                 id: "{{ id }}" # NEW
-              afterResponse: "genNewBidReply"
           count: "{{ numBids }}"   
         - loop:                          # Let's add numQuestions questions to the auction
           - function: "selectUserSkewed"
@@ -112,7 +110,6 @@ scenarios:
               capture:                     # Capturing question id and store it in variable questionId
                 - json: $.id
                   as: "questionId"
-              afterResponse: "genNewQuestionR"
           - function: "genNewQuestionReply"
           - post:                         
               url: "/user/auth"
@@ -135,7 +132,6 @@ scenarios:
                 userId: "{{ user }}"
                 message: "{{ text }}"
                 reply: "{{ reply }}"
-              afterResponse: "genNewQuestionReplyR"
               ifTrue: "reply"
           count: "{{ numQuestions }}"   
         count: "{{ numAuctions }}"
