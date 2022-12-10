@@ -265,16 +265,16 @@ function genNewQuestionReplyR(requestParams, response, context, ee, next) {
  * Generate data for a new bid
  */
 function genNewBid(context, events, done) {
-	if( typeof context.vars.amount == 'undefined') {
-		if( typeof context.vars.minPrice == 'undefined') {
-			context.vars.amount = random(100)
+	if( typeof context.vars.bidValue == 'undefined') {
+		if( typeof context.vars.minimumPrice == 'undefined') {
+			context.vars.bidValue = random(100)
 		} else {
-			context.vars.amount = context.vars.minPrice + random(3)
+			context.vars.bidValue = context.vars.minimumPrice + random(3)
 		}
 	}
-	
-	context.vars.id = (bidIdCounter++).toString();
-	context.vars.amount = context.vars.amount + 1 + random(3)
+	context.vars.value = context.vars.bidValue;
+	context.vars.bidValue = context.vars.bidValue + 1 + random(3)
+
 	return done()
 }
 
