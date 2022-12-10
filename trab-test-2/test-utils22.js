@@ -7,7 +7,6 @@ module.exports = {
   uploadImageBody,
   genNewUser,
   genNewUserReply,
-  genNewAuctionReply,
   selectUser,
   selectUserSkewed,
   genNewAuction,
@@ -19,27 +18,16 @@ module.exports = {
   decideNextAction,
   random80,
   random50,
-  genNewBidReply,
-  genNewQuestionR,
-  genNewQuestionReplyR
 }
 
-const Faker = require('@faker-js/faker').faker
+
+const Faker = require('faker/locale/en_US')
 const fs = require('fs')
 const path = require('path')
 
 var imagesIds = []
 var images = []
 var users = []
-var bids = []
-var auctions = []
-var replies = []
-var questions = []
-
-var auctionIdCounter = 0;
-var bidIdCounter = 0;
-var questionIdCounter = 0;
-
 
 // Auxiliary function to select an element from an array
 Array.prototype.sample = function(){
@@ -76,10 +64,10 @@ function randomSkewed( val){
 // Loads data about images from disk
 function loadData() {
 	var basedir
-	if( fs.existsSync("/images")) 
+	if( fs.existsSync( '/images')) 
 		basedir = '/images'
 	else
-		basedir = 'images'	
+		basedir =  'images'	
 	fs.readdirSync(basedir).forEach( file => {
 		if( path.extname(file) === ".jpeg") {
 			var img  = fs.readFileSync(basedir + "/" + file)
@@ -145,7 +133,6 @@ function genNewUser(context, events, done) {
  */
 function genNewUserReply(requestParams, response, context, ee, next) {
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		console.log("RESPONSE BODY --> " + response.body)
 		let u = JSON.parse( response.body)
 		users.push(u)
 		fs.writeFileSync('users.data', JSON.stringify(users));
@@ -192,12 +179,10 @@ function selectUserSkewed(context, events, done) {
  * bidValue - price for the next bid
  */
 function genNewAuction(context, events, done) {
-	context.vars.id = (auctionIdCounter++).toString();
 	context.vars.title = `${Faker.commerce.productName()}`
 	context.vars.description = `${Faker.commerce.productDescription()}`
 	context.vars.minimumPrice = `${Faker.commerce.price()}`
 	context.vars.bidValue = context.vars.minimumPrice + random(3)
-	context.vars.winningBid = null;
 	var maxBids = 5
 	if( typeof context.vars.maxBids !== 'undefined')
 		maxBids = context.vars.maxBids;
@@ -205,63 +190,24 @@ function genNewAuction(context, events, done) {
 	if( typeof context.vars.maxQuestions !== 'undefined')
 		maxQuestions = context.vars.maxQuestions;
 	var d = new Date();
-	d.setTime(Date.now() + random(300000));
+	d.setTime(Date.now() + random( 300000));
 	context.vars.endTime = d.toISOString();
-	console.log("DATE: " + d.toISOString())
 	if( Math.random() > 0.2) { 
-		context.vars.status = "open";
+		context.vars.status = "OPEN";
 		context.vars.numBids = random( maxBids);
 		context.vars.numQuestions = random( maxQuestions);
 	} else {
-		context.vars.status = "closed";
+		context.vars.status = "CLOSED";
 		delete context.vars.numBids;
 		delete context.vars.numQuestions;
 	}
 	return done()
 }
 
-function genNewAuctionReply(requestParams, response, context, ee, next) {
-	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		let a = JSON.parse(response.body)
-		auctions.push(a)
-		fs.writeFileSync('auctions.data', JSON.stringify(auctions));
-	}
-    return next()
-}
-
-function genNewBidReply(requestParams, response, context, ee, next) {
-	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		let a = JSON.parse(response.body)
-		bids.push(a)
-		fs.writeFileSync('bids.data', JSON.stringify(bids));
-	}
-    return next()
-}
-
-function genNewQuestionR(requestParams, response, context, ee, next) {
-	console.log("\n\n\nRESPOSTA: "+ response.body.length);
-	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		let a = JSON.parse(response.body)
-		questions.push(a)
-		fs.writeFileSync('questions.data', JSON.stringify(questions));
-	}
-    return next()
-}
-
-function genNewQuestionReplyR(requestParams, response, context, ee, next) {
-	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		let a = JSON.parse(response.body)
-		replies.push(a)
-		fs.writeFileSync('replies.data', JSON.stringify(replies));
-	}
-    return next()
-}
-
 /**
  * Generate data for a new bid
  */
 function genNewBid(context, events, done) {
-	
 	if( typeof context.vars.bidValue == 'undefined') {
 		if( typeof context.vars.minimumPrice == 'undefined') {
 			context.vars.bidValue = random(100)
@@ -269,8 +215,6 @@ function genNewBid(context, events, done) {
 			context.vars.bidValue = context.vars.minimumPrice + random(3)
 		}
 	}
-	
-	context.vars.id = (bidIdCounter++).toString();
 	context.vars.value = context.vars.bidValue;
 	context.vars.bidValue = context.vars.bidValue + 1 + random(3)
 	return done()
@@ -280,9 +224,7 @@ function genNewBid(context, events, done) {
  * Generate data for a new question
  */
 function genNewQuestion(context, events, done) {
-	context.vars.id = (questionIdCounter++).toString();
 	context.vars.text = `${Faker.lorem.paragraph()}`;
-	context.vars.reply = "";
 	return done()
 }
 
@@ -400,6 +342,7 @@ function decideNextAction(context, events, done) {
 	return done()
 }
 
+
 /**
  * Return true with probability 50% 
  */
@@ -429,4 +372,5 @@ function extractCookie(requestParams, response, context, ee, next) {
 	}
     return next()
 }
+
 

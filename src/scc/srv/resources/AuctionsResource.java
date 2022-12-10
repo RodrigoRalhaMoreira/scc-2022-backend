@@ -68,13 +68,13 @@ public class AuctionsResource {
     public Auction create(@CookieParam("scc:session") Cookie session, Auction auction)
             throws IllegalArgumentException, IllegalAccessException {
 
-        // Winning bids start by default with the value of null
+        /**
         try {
             users.checkCookieUser(session, auction.getOwnerId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
         }
-
+**/
         String result = checkAuction(auction);
 
         if (result != null)

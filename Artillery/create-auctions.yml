@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
+  target: 'http://20.31.105.177/rest'
   http:
     timeout: 10
   plugins:
@@ -7,8 +7,8 @@ config:
       useOnlyRequestNames: true  # new mode to aggregate metrics in artillery
   processor: "./test-utils.js"
   variables:
-    numAuctions : 3
-    maxBids : 2  # maximum number of bids to generate for each new auction
+    numAuctions : 300
+    maxBids : 10  # maximum number of bids to generate for each new auction
     maxQuestions : 2 # maximum number of questions to generate for each new auction
   phases:
   - name: "Create auctions"    # Create channels
@@ -27,7 +27,7 @@ scenarios:
             headers:
               Content-Type: application/json
             json:
-              id: "{{ user }}" #user
+              userId: "{{ user }}"
               pwd: "{{ pwd }}"
         - function: "genNewAuction"
         - post:                          # First: post image for the auction
@@ -47,21 +47,18 @@ scenarios:
               Content-Type: application/json
               Accept: application/json
             json:
-              id: "{{ id }}"   # NEW
-              description: "{{ description }}"
               title: "{{ title }}"
+              description: "{{ description }}"
+              imageId: "{{ imageId }}"
               ownerId: "{{ user }}"
-              imgId: "{{ imageId }}"
-              endTime: "{{ endTime }}"
-              minPrice: "{{ minimumPrice }}"
-              status: "{{ status }}"
-              winningBid: "{{ winningBid }}"
+              endDate: "{{ endTime }}"
+              minimumPrice: "{{ minimumPrice }}"
+              auctionStatus: "{{ status }}"
             capture:                     # Capturing auction id and store it in variable auctionId
               - json: $.id
                 as: "auctionId"
               - json: $.ownerId
                 as: "auctionUser"
-            afterResponse: "genNewAuctionReply"
         - loop:                          # Let's add numBids bids to the auction
           - function: "selectUserSkewed"
           - function: "genNewBid"
@@ -71,7 +68,7 @@ scenarios:
               headers:
                 Content-Type: application/json
               json:
-                user: "{{ user }}"
+                userId: "{{ user }}"
                 pwd: "{{ pwd }}"
           - post:                          # New bid     
               url: "/auction/{{ auctionId }}/bid"
@@ -81,10 +78,9 @@ scenarios:
                 Accept: application/json
               json:
                 auctionId: "{{ auctionId }}"
+                amount: "{{ value }}"
                 userId: "{{ user }}"
-                value: "{{ value }}"
-                id: "{{ id }}" # NEW
-              afterResponse: "genNewBidReply"
+                time: "{{ bidTime }}"
           count: "{{ numBids }}"   
         - loop:                          # Let's add numQuestions questions to the auction
           - function: "selectUserSkewed"
@@ -95,7 +91,7 @@ scenarios:
               headers:
                 Content-Type: application/json
               json:
-                user: "{{ user }}"
+                userId: "{{ user }}"
                 pwd: "{{ pwd }}"
           - post:                          # New question     
               url: "/auction/{{ auctionId }}/question"
@@ -104,15 +100,12 @@ scenarios:
                 Content-Type: application/json
                 Accept: application/json
               json:
-                id: "{{ id }}" # NEW
-                auctionId: "{{ auctionId }}"
-                userId: "{{ user }}"
+                auctionId: "{{ auctionId }}" 
+                userId: "{{ user }}" 
                 message: "{{ text }}"
-                reply: "{{ reply }}"
               capture:                     # Capturing question id and store it in variable questionId
                 - json: $.id
                   as: "questionId"
-              afterResponse: "genNewQuestionR"
           - function: "genNewQuestionReply"
           - post:                         
               url: "/user/auth"
@@ -120,7 +113,7 @@ scenarios:
               headers:
                 Content-Type: application/json
               json:
-                user: "{{ auctionUser }}"
+                userId: "{{ auctionUser }}"
                 pwd: "{{ auctionUserPwd }}"
               ifTrue: "reply"
           - post:                          # New reply     
@@ -130,13 +123,9 @@ scenarios:
                 Content-Type: application/json
                 Accept: application/json
               json:
-                id: "{{ id }}"
-                auctionId: "{{ auctionId }}"
-                userId: "{{ user }}"
-                message: "{{ text }}"
                 reply: "{{ reply }}"
-              afterResponse: "genNewQuestionR"
               ifTrue: "reply"
           count: "{{ numQuestions }}"   
         count: "{{ numAuctions }}"
+
 

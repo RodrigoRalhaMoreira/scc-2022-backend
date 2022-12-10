@@ -7,6 +7,7 @@ import scc.cosmosdb.models.BidDAO;
 import scc.cosmosdb.models.QuestionDAO;
 import scc.cosmosdb.models.UserDAO;
 import scc.srv.MainApplication;
+import scc.srv.dataclasses.Auction;
 import scc.srv.dataclasses.Login;
 import scc.srv.dataclasses.Session;
 import scc.srv.dataclasses.User;
@@ -163,20 +164,20 @@ public class UsersResource {
     @Path("/{id}/auctions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getAuctionsOfUser(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+    public List<Auction> getAuctionsOfUser(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 
         try {
             checkCookieUser(session, id);
         } catch (Exception e) {
             List<String> error = new ArrayList<String>();
             error.add(e.getMessage());
-            return error;
+            return null;
         }
 
-        List<String> auctions = new ArrayList<>();
+        List<Auction> auctions = new ArrayList<>();
         Iterator<AuctionDAO> it = db_instance.getAuctionsByUserId(id).iterator();
         while (it.hasNext()) {
-            auctions.add((it.next().toAuction()).toString());
+            auctions.add((it.next().toAuction()));
         }
         return auctions;
     }
@@ -230,21 +231,21 @@ public class UsersResource {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> openAuctionsUserList(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
+    public List<Auction> openAuctionsUserList(@CookieParam("scc:session") Cookie session, @PathParam("id") String id) {
 
         try {
             checkCookieUser(session, id);
         } catch (Exception e) {
             List<String> error = new ArrayList<String>();
             error.add(e.getMessage());
-            return error;
+            return null;
         }
 
-        List<String> openAuctions = new ArrayList<>();
+        List<Auction> openAuctions = new ArrayList<>();
 
         Iterator<AuctionDAO> it = db_instance.getOpenAuctions(id).iterator();
         while (it.hasNext())
-            openAuctions.add(it.next().toAuction().toString());
+            openAuctions.add(it.next().toAuction());
 
         return openAuctions;
     }

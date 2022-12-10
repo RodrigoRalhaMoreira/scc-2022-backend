@@ -64,8 +64,13 @@ public class BidResource {
     public Bid create(@CookieParam("scc:session") Cookie session, Bid bid)
             throws Exception {
 
-        // users.checkCookieUser(session, bid.getUserId());
 
+        try {
+            users.checkCookieUser(session, bid.getUserId());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+        }
+        
         String result = checkBid(bid);
 
         if (result != null)
@@ -118,18 +123,18 @@ public class BidResource {
     @Path("/{id}/bid")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> list(@PathParam("id") String id) {
+    public List<Bid> list(@PathParam("id") String id) {
 
-        List<String> bids = new ArrayList<>();
+        List<Bid> bids = new ArrayList<>();
 
-        // this does not make sense we're only doing this for the moment
+        /** this does not make sense we're only doing this for the moment
         if (getAuctionInDB(id) == null)
-            return bids;
+            return bids; **/
 
         Iterator<BidDAO> bidsIt = db_instance.getBidsByAuctionId(id).iterator();
 
         while (bidsIt.hasNext())
-            bids.add(bidsIt.next().toBid().toString());
+            bids.add(bidsIt.next().toBid());
 
         return bids;
     }

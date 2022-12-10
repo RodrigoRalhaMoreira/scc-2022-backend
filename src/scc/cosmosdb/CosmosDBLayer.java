@@ -77,7 +77,6 @@ public class CosmosDBLayer {
 		login = db.getContainer("login");
 		popularAuctions = db.getContainer("popularAuctions");
 		recentAuctions = db.getContainer("recentAuctions");
-
 	}
 
 	public CosmosItemResponse<Object> delUserById(String id) {

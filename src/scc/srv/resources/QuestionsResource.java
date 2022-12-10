@@ -95,20 +95,15 @@ public class QuestionsResource {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<String> listAuctionQuestions(@PathParam("id") String auctionId)
+    public List<Question> listAuctionQuestions(@PathParam("id") String auctionId)
             throws IllegalArgumentException, IllegalAccessException {
 
-        List<String> list = new ArrayList<>();
-
-        if (!auctionExistsInDB(auctionId)) {
-            list.add(AUCTION_ID_NOT_EXISTS_DB);
-            return list;
-        }
+        List<Question> list = new ArrayList<>();
 
         Iterator<QuestionDAO> it = db_instance.getQuestionsByAuctionId(auctionId).iterator();
 
         if (it.hasNext())
-            list.add(((QuestionDAO) it.next()).toQuestion().toString());
+            list.add(((QuestionDAO) it.next()).toQuestion());
 
         return list;
     }
