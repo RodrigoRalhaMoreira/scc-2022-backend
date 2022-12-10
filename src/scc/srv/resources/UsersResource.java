@@ -67,7 +67,7 @@ public class UsersResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String create(User user) throws IllegalArgumentException, IllegalAccessException {
+    public User create(User user) throws IllegalArgumentException, IllegalAccessException {
 
         //String error = checkUser(user);
 
@@ -76,7 +76,7 @@ public class UsersResource {
 
         String res = jedis_instance.get("user:" + user.getId());
         if (res != null)
-            return USER_ALREADY_EXISTS;
+            return null;
 
         UserDAO userDao = new UserDAO(user);
         try {
@@ -86,7 +86,7 @@ public class UsersResource {
         }
 
         db_instance.putUser(userDao);
-        return userDao.getId();
+        return user;
     }
 
     /**
@@ -99,20 +99,20 @@ public class UsersResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String update(@CookieParam("scc:session") Cookie session, User user)
+    public User update(@CookieParam("scc:session") Cookie session, User user)
             throws IllegalArgumentException, IllegalAccessException {
 
         try {
             checkCookieUser(session, user.getId());
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return e.getMessage();
+            return null;
         }
 
         String error = checkUser(user);
 
         if (error != null)
-            return error;
+            return null;
 
         UserDAO userDao = new UserDAO(user);
         try {
@@ -120,7 +120,7 @@ public class UsersResource {
             if (res != null) {
                 jedis_instance.setex("user:" + user.getId(), DEFAULT_REDIS_EXPIRE, mapper.writeValueAsString(user));
                 db_instance.updateUser(userDao);
-                return userDao.getId();
+                return null;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -128,10 +128,10 @@ public class UsersResource {
 
         if (userExistsInDB(user.getId())) {
             db_instance.updateUser(userDao);
-            return userDao.getId();
+            return user;
         }
 
-        return UPDATE_ERROR;
+        return null;
     }
 
     /**

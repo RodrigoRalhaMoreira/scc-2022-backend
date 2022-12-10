@@ -15,7 +15,7 @@ public class AuctionDAO {
     private String imgId;
     private String ownerId;
     private Date endTime;
-    private int minPrice;
+    private float minPrice;
     private Bid winningBid;
     private String status;
 
@@ -28,7 +28,7 @@ public class AuctionDAO {
     }
 
     public AuctionDAO(String id, String title, String desription, String imgId, String ownerId, Date endTime,
-            int minPrice, Bid winningBid, String status) {
+        float minPrice, Bid winningBid, String status) {
         super();
         this.id = id;
         this.title = title;
@@ -105,11 +105,11 @@ public class AuctionDAO {
         this.endTime = endTime;
     }
 
-    public int getMinPrice() {
+    public float getMinPrice() {
         return minPrice;
     }
 
-    public void setMinPrice(int minPrice) {
+    public void setMinPrice(float minPrice) {
         this.minPrice = minPrice;
     }
 

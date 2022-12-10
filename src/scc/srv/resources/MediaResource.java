@@ -1,15 +1,17 @@
 package scc.srv.resources;
 
-import scc.utils.Hash;
-
 import jakarta.ws.rs.*;
-import java.util.List;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import scc.utils.Hash;
 import java.util.ArrayList;
+import java.util.List;
+
+import com.azure.core.http.rest.PagedIterable;
+import com.azure.core.util.BinaryData;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobContainerClientBuilder;
+import com.azure.storage.blob.models.BlobItem;
+
 import jakarta.ws.rs.core.MediaType;
 
 /**
@@ -19,29 +21,49 @@ import jakarta.ws.rs.core.MediaType;
 public class MediaResource {
 
     private static final String ERROR_MSG = "Use: java scc.utils.UploadToStorage filename";
+    
+    // Get connection string in the storage access keys page
+    private static String storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=scc22;AccountKey=Mcu25uDpgVcSwi9c1FxegVLYmeFw3VOJ4SbdxMDJM54ZLpdk7kHFUYbrvlmiDyNthjtfa7Ah9Xau+AStL7GECQ==;EndpointSuffix=core.windows.net";
+    // Get container client
+    private BlobContainerClient containerClient = new BlobContainerClientBuilder()
+            .connectionString(storageConnectionString)
+            .containerName("images").buildClient();
 
     public MediaResource() {
     }
 
+    public MediaResource(String connectionString) {
+        storageConnectionString = connectionString;
+        containerClient = new BlobContainerClientBuilder().connectionString(storageConnectionString)
+                .containerName("images").buildClient();
+    }
+
     /**
      * Post a new image.The id of the image is its hash.
-     * 
-     * @throws IOException
-     * @throws FileNotFoundException
      */
     @POST
     @Path("/")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    public String upload(byte[] contents) throws FileNotFoundException, IOException {
+    public String upload(byte[] contents) {
 
         if (contents == null)
             return ERROR_MSG;
 
         String filename = Hash.of(contents);
-        String path = System.getenv("azure-managed-disk") + "/" + filename;
-        try (FileOutputStream stream = new FileOutputStream(path)) {
-            stream.write(contents);
+
+        try {
+
+            BinaryData data = BinaryData.fromBytes(contents); // BinaryData.fromFile(java.nio.file.Path.of(filename));
+
+            // Get client to blob
+            BlobClient blob = containerClient.getBlobClient(filename);
+
+            // Upload contents from BinaryData (check documentation for other alternatives)
+            blob.upload(data);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return filename;
@@ -50,20 +72,29 @@ public class MediaResource {
     /**
      * Return the contents of an image. Throw an appropriate error message if
      * id does not exist.
-     * 
-     * @throws IOException
      */
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public byte[] download(@PathParam("id") String id) throws IOException {
-        byte[] bytes = null;
-        String path = System.getenv("azure-managed-disk") + "/"+ id;
-        try (FileInputStream stream = new FileInputStream(path)) {
-            bytes = stream.readAllBytes();
+    public byte[] download(@PathParam("id") String id) {
+
+        try {
+
+            // Get client to blob
+            BlobClient blob = containerClient.getBlobClient(id);
+
+            // Download contents to BinaryData (check documentation for other alternatives)
+            BinaryData data = blob.downloadContent();
+
+            System.out.println("Blob size : " + data.toBytes().length);
+
+            return data.toBytes();
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        return (bytes != null) ? bytes : null;
+        return null;
     }
 
     /**
@@ -75,38 +106,34 @@ public class MediaResource {
     public List<String> list() {
 
         List<String> list = new ArrayList<>();
-        String dir = System.getenv("azure-managed-disk");
-        String[] dirs = (new File(dir)).list();
-        for(String id: dirs)
-            list.add(id);
-        /*
-         * try {
-         * 
-         * // Get client to blob
-         * PagedIterable<BlobItem> blob = containerClient.listBlobs();
-         * 
-         * for (BlobItem item : blob)
-         * list.add(item.getName());
-         * 
-         * return list;
-         * 
-         * } catch (Exception e) {
-         * e.printStackTrace();
-         * }
-         */
-        return list;
+
+        try {
+
+            // Get client to blob
+            PagedIterable<BlobItem> blob = containerClient.listBlobs();
+
+            for (BlobItem item : blob)
+                list.add(item.getName());
+
+            return list;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public boolean verifyImgId(String ImgId) {
-        return true;
-        // List<String> list = new ArrayList<>();
 
-        // // Get client to blob
-        // PagedIterable<BlobItem> blob = containerClient.listBlobs();
+        List<String> list = new ArrayList<>();
 
-        // for (BlobItem item : blob)
-        // list.add(item.getName());
+        // Get client to blob
+        PagedIterable<BlobItem> blob = containerClient.listBlobs();
 
-        // return list.contains(ImgId);
+        for (BlobItem item : blob)
+            list.add(item.getName());
+
+        return list.contains(ImgId);
     }
 }

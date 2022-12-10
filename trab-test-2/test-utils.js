@@ -201,6 +201,7 @@ function genNewAuction(context, events, done) {
 	var d = new Date();
 	d.setTime(Date.now() + random(300000));
 	context.vars.endTime = d.toISOString();
+	console.log("DATE: " + d.toISOString())
 	if( Math.random() > 0.2) { 
 		context.vars.status = "open";
 		context.vars.numBids = random( maxBids);
@@ -214,8 +215,9 @@ function genNewAuction(context, events, done) {
 }
 
 function genNewAuctionReply(requestParams, response, context, ee, next) {
+	console.log("\n\n\nRESPOSTA: "+ response.body);
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		let a = JSON.parse( response.body)
+		let a = JSON.parse(response.body)
 		auctions.push(a)
 		fs.writeFileSync('auctions.data', JSON.stringify(auctions));
 	}

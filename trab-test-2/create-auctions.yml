@@ -1,5 +1,5 @@
 config:
-  target: 'http://20.103.34.28/rest'
+  target: 'https://scc-backend-58763-54123-45128.azurewebsites.net/rest'
   http:
     timeout: 10
   plugins:

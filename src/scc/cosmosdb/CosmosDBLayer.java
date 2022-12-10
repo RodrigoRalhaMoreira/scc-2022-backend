@@ -29,7 +29,7 @@ public class CosmosDBLayer {
 
 	private static final String CONNECTION_URL = "https://scc22235.documents.azure.com:443/";
     private static final String DB_KEY = "LTtd6QsAm0SN4X56YVCvoYGPquvr1KAuPi5UFoiDD6g0oDgTvrTpH56T4R5qo046xm8UYzbNwFtFePvJuTdNJg==";
-    private static final String DB_NAME = "scc22235";
+    private static final String DB_NAME = "container";
 
 	private static CosmosDBLayer instance;
 

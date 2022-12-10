@@ -20,6 +20,8 @@ import jakarta.ws.rs.core.Cookie;
 import redis.clients.jedis.Jedis;
 import jakarta.ws.rs.core.MediaType;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Resource for managing auction.
@@ -31,6 +33,7 @@ public class AuctionsResource {
     private UsersResource users;
     private static Jedis jedis_instance;
     private static CosmosDBLayer db_instance;
+    private ObjectMapper mapper;
 
     private static final String AUCTION_NULL = "Null auction exception";
     private static final String USER_NOT_EXIST = "User does not exist";
@@ -50,6 +53,7 @@ public class AuctionsResource {
             if (resource instanceof UsersResource)
                 users = (UsersResource) resource;
         }
+        mapper = new ObjectMapper();
     }
 
     /**
@@ -99,7 +103,7 @@ public class AuctionsResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String update(@CookieParam("scc:session") Cookie session, Auction auction)
+    public Auction update(@CookieParam("scc:session") Cookie session, Auction auction)
             throws IllegalArgumentException, IllegalAccessException {
 
         try {
@@ -112,7 +116,7 @@ public class AuctionsResource {
         String error = checkAuction(auction);
 
         if (error != null)
-            return error;
+            return null;
 
         // Actual status
         String currentStatus = getStatusAuction(auction.getId());
@@ -124,28 +128,26 @@ public class AuctionsResource {
 
         // Status special verification when updating an auction
         if (!isValidStatus(auction.getStatus()) || currentStatusValue > newStatusValue)
-            return INVALID_STATUS;
+            return null;
 
         // Checks if auctionId exists
         if (!db_instance.getAuctionById(auction.getId()).iterator().hasNext())
-            return AUCTION_NOT_EXIST;
-
+            return null;
         AuctionDAO dbAuction = new AuctionDAO(auction);
         db_instance.updateAuction(dbAuction);
-        return dbAuction.getId();
+        return auction;
     }
 
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getAuction(@PathParam("id") String id) {
+    public Auction getAuction(@PathParam("id") String id) throws JsonMappingException, JsonProcessingException {
         String res = jedis_instance.get("auction:" + id);
         if (res != null)
-            return res;
-
+            return mapper.readValue(res, Auction.class);
         Iterator<AuctionDAO> it = db_instance.getAuctionById(id).iterator();
         if (it.hasNext())
-            return ((((AuctionDAO) it.next()).toAuction()).toString());
+            return ((((AuctionDAO) it.next()).toAuction()));
         return null;
     }
 
