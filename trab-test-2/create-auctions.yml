@@ -61,6 +61,8 @@ scenarios:
                 as: "auctionId"
               - json: $.ownerId
                 as: "auctionUser"
+              - json: $.minPrice
+                as: minPrice
             afterResponse: "genNewAuctionReply"
         - loop:                          # Let's add numBids bids to the auction
           - function: "selectUserSkewed"
@@ -82,7 +84,7 @@ scenarios:
               json:
                 auctionId: "{{ auctionId }}"
                 userId: "{{ user }}"
-                amount: "{{ value }}"
+                amount: "{{ amount }}"
                 id: "{{ id }}" # NEW
               afterResponse: "genNewBidReply"
           count: "{{ numBids }}"   
